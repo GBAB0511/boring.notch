@@ -36,12 +36,12 @@ enum HideNotchOption: String, Defaults.Serializable {
     case never
 }
 
-// Define notification names at file scope
+// 在文件作用域定义通知名称
 extension Notification.Name {
     static let mediaControllerChanged = Notification.Name("mediaControllerChanged")
 }
 
-// Media controller types for selection in settings
+// 供设置界面选择的媒体控制器类型
 enum MediaControllerType: String, CaseIterable, Identifiable, Defaults.Serializable {
     case nowPlaying = "Now Playing"
     case appleMusic = "Apple Music"
@@ -51,7 +51,7 @@ enum MediaControllerType: String, CaseIterable, Identifiable, Defaults.Serializa
     var id: String { self.rawValue }
 }
 
-// Sneak peek styles for selection in settings
+// 供设置界面选择的「偷看」样式
 enum SneakPeekStyle: String, CaseIterable, Identifiable, Defaults.Serializable {
     case standard = "Default"
     case inline = "Inline"
@@ -59,7 +59,7 @@ enum SneakPeekStyle: String, CaseIterable, Identifiable, Defaults.Serializable {
     var id: String { self.rawValue }
 }
 
-// Action to perform when Option (⌥) is held while pressing media keys
+// 按住 Option(⌥) 键同时按媒体键时执行的动作
 enum OptionKeyAction: String, CaseIterable, Identifiable, Defaults.Serializable {
     case openSettings = "Open System Settings"
     case showHUD = "Show HUD"
@@ -69,13 +69,13 @@ enum OptionKeyAction: String, CaseIterable, Identifiable, Defaults.Serializable 
 }
 
 extension Defaults.Keys {
-    // MARK: General
+    // MARK: 通用
     static let menubarIcon = Key<Bool>("menubarIcon", default: true)
     static let showOnAllDisplays = Key<Bool>("showOnAllDisplays", default: false)
     static let automaticallySwitchDisplay = Key<Bool>("automaticallySwitchDisplay", default: true)
     static let releaseName = Key<String>("releaseName", default: "Flying Rabbit 🐇🪽")
     
-    // MARK: Behavior
+    // MARK: 行为
     static let minimumHoverDuration = Key<TimeInterval>("minimumHoverDuration", default: 0.3)
     static let enableHaptics = Key<Bool>("enableHaptics", default: true)
     static let openNotchOnHover = Key<Bool>("openNotchOnHover", default: true)
@@ -94,7 +94,7 @@ extension Defaults.Keys {
     static let showOnLockScreen = Key<Bool>("showOnLockScreen", default: false)
     static let hideFromScreenRecording = Key<Bool>("hideFromScreenRecording", default: false)
     
-    // MARK: Appearance
+    // MARK: 外观
     static let showEmojis = Key<Bool>("showEmojis", default: false)
     //static let alwaysShowTabs = Key<Bool>("alwaysShowTabs", default: true)
     static let showMirror = Key<Bool>("showMirror", default: false)
@@ -117,12 +117,12 @@ extension Defaults.Keys {
     static let customVisualizers = Key<[CustomVisualizer]>("customVisualizers", default: [])
     static let selectedVisualizer = Key<CustomVisualizer?>("selectedVisualizer", default: nil)
     
-    // MARK: Gestures
+    // MARK: 手势
     static let enableGestures = Key<Bool>("enableGestures", default: true)
     static let closeGestureEnabled = Key<Bool>("closeGestureEnabled", default: true)
     static let gestureSensitivity = Key<CGFloat>("gestureSensitivity", default: 200.0)
     
-    // MARK: Media playback
+    // MARK: 媒体播放
     static let coloredSpectrogram = Key<Bool>("coloredSpectrogram", default: true)
     static let enableSneakPeek = Key<Bool>("enableSneakPeek", default: false)
     static let sneakPeekStyles = Key<SneakPeekStyle>("sneakPeekStyles", default: .standard)
@@ -138,13 +138,13 @@ extension Defaults.Keys {
         default: MusicControlButton.defaultLayout.count
     )
     
-    // MARK: Battery
+    // MARK: 电池
     static let showPowerStatusNotifications = Key<Bool>("showPowerStatusNotifications", default: true)
     static let showBatteryIndicator = Key<Bool>("showBatteryIndicator", default: true)
     static let showBatteryPercentage = Key<Bool>("showBatteryPercentage", default: true)
     static let showPowerStatusIcons = Key<Bool>("showPowerStatusIcons", default: true)
     
-    // MARK: Downloads
+    // MARK: 下载
     static let enableDownloadListener = Key<Bool>("enableDownloadListener", default: true)
     static let enableSafariDownloads = Key<Bool>("enableSafariDownloads", default: true)
     static let selectedDownloadIndicatorStyle = Key<DownloadIndicatorStyle>("selectedDownloadIndicatorStyle", default: DownloadIndicatorStyle.progress)
@@ -159,10 +159,10 @@ extension Defaults.Keys {
     static let showOpenNotchHUD = Key<Bool>("showOpenNotchHUD", default: true)
     static let showOpenNotchHUDPercentage = Key<Bool>("showOpenNotchHUDPercentage", default: true)
     static let showClosedNotchHUDPercentage = Key<Bool>("showClosedNotchHUDPercentage", default: false)
-    // Option key modifier behaviour for media keys
+    // 媒体键的 Option 修饰键行为
     static let optionKeyAction = Key<OptionKeyAction>("optionKeyAction", default: OptionKeyAction.openSettings)
     
-    // MARK: Shelf
+    // MARK: 货架
     static let boringShelf = Key<Bool>("boringShelf", default: true)
     static let openShelfByDefault = Key<Bool>("openShelfByDefault", default: true)
     static let shelfTapToOpen = Key<Bool>("shelfTapToOpen", default: true)
@@ -171,25 +171,25 @@ extension Defaults.Keys {
     static let autoRemoveShelfItems = Key<Bool>("autoRemoveShelfItems", default: false)
     static let expandedDragDetection = Key<Bool>("expandedDragDetection", default: true)
     
-    // MARK: Calendar
+    // MARK: 日历
     static let calendarSelectionState = Key<CalendarSelectionState>("calendarSelectionState", default: .all)
     static let hideAllDayEvents = Key<Bool>("hideAllDayEvents", default: false)
     static let showFullEventTitles = Key<Bool>("showFullEventTitles", default: false)
     static let autoScrollToNextEvent = Key<Bool>("autoScrollToNextEvent", default: true)
     
-    // MARK: Fullscreen Media Detection
+    // MARK: 全屏媒体检测
     static let hideNotchOption = Key<HideNotchOption>("hideNotchOption", default: .nowPlayingOnly)
     
-    // MARK: Media Controller
+    // MARK: 媒体控制器
     static let mediaController = Key<MediaControllerType>("mediaController", default: defaultMediaController)
     
-    // MARK: Advanced Settings
+    // MARK: 高级设置
     static let useCustomAccentColor = Key<Bool>("useCustomAccentColor", default: false)
     static let customAccentColorData = Key<Data?>("customAccentColorData", default: nil)
-    // Show or hide the title bar
+    // 显示或隐藏标题栏
     static let hideTitleBar = Key<Bool>("hideTitleBar", default: true)
     
-    // Helper to determine the default media controller based on NowPlaying deprecation status
+    // 根据 NowPlaying 是否已弃用，判断默认媒体控制器的辅助属性
     static var defaultMediaController: MediaControllerType {
         if MusicManager.shared.isNowPlayingDeprecated {
             return .appleMusic

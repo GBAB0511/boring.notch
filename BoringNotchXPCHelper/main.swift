@@ -9,31 +9,31 @@ import Foundation
 
 class ServiceDelegate: NSObject, NSXPCListenerDelegate {
     
-    /// This method is where the NSXPCListener configures, accepts, and resumes a new incoming NSXPCConnection.
+    /// 此方法用于配置、接受并恢复一个新的传入 NSXPCConnection
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
         
-        // Configure the connection.
-        // First, set the interface that the exported object implements.
+        // 配置连接。
+        // 首先，设置被导出对象所实现的接口。
         newConnection.exportedInterface = NSXPCInterface(with: (any BoringNotchXPCHelperProtocol).self)
         
-        // Next, set the object that the connection exports. All messages sent on the connection to this service will be sent to the exported object to handle. The connection retains the exported object.
+        // 接着，设置连接导出的对象。所有发往此服务的消息都会交给导出对象处理，连接会持有该对象。
         let exportedObject = BoringNotchXPCHelper()
         newConnection.exportedObject = exportedObject
         
-        // Resuming the connection allows the system to deliver more incoming messages.
+        // 恢复连接以便系统投递更多传入消息。
         newConnection.resume()
         
-        // Returning true from this method tells the system that you have accepted this connection. If you want to reject the connection for some reason, call invalidate() on the connection and return false.
+        // 返回 true 表示已接受连接；若需拒绝，可对连接调用 invalidate() 并返回 false。
         return true
     }
 }
 
-// Create the delegate for the service.
+// 创建服务的委托。
 let delegate = ServiceDelegate()
 
-// Set up the one NSXPCListener for this service. It will handle all incoming connections.
+// 为本服务设置唯一的 NSXPCListener，用于处理所有传入连接。
 let listener = NSXPCListener.service()
 listener.delegate = delegate
 
-// Resuming the serviceListener starts this service. This method does not return.
+// 恢复 serviceListener 以启动本服务，此方法不会返回。
 listener.resume()

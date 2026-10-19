@@ -19,7 +19,7 @@ final class ShelfStateViewModel: ObservableObject {
 
     var isEmpty: Bool { items.isEmpty }
 
-    // Queue for deferred bookmark updates to avoid publishing during view updates
+    // 延迟书签更新的队列，避免在视图更新期间发布（防止发布嵌套冲突）
     private var pendingBookmarkUpdates: [ShelfItem.ID: Data] = [:]
     private var updateTask: Task<Void, Never>?
 
@@ -31,7 +31,7 @@ final class ShelfStateViewModel: ObservableObject {
     func add(_ newItems: [ShelfItem]) {
         guard !newItems.isEmpty else { return }
         var merged = items
-        // Deduplicate by identityKey while preserving order (existing first)
+        // 按 identityKey 去重并保持顺序（已有的在前）
         var seen: Set<String> = Set(merged.map { $0.identityKey })
         for it in newItems {
             let key = it.identityKey
@@ -58,7 +58,7 @@ final class ShelfStateViewModel: ObservableObject {
     private func scheduleDeferredBookmarkUpdate(for item: ShelfItem, bookmark: Data) {
         pendingBookmarkUpdates[item.id] = bookmark
         
-        // Cancel existing task and schedule a new one
+        // 取消已有任务并调度新任务
         updateTask?.cancel()
         updateTask = Task { @MainActor [weak self] in
             await Task.yield()

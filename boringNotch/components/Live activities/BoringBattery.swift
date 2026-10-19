@@ -13,7 +13,7 @@ struct BatteryView: View {
 
     var icon: String = "battery.0"
 
-    /// Determines the icon to display when charging.
+    /// 根据充电状态确定要显示的图标
     var iconStatus: String {
         if isCharging {
             return "bolt"
@@ -26,7 +26,7 @@ struct BatteryView: View {
         }
     }
 
-    /// Determines the color of the battery based on its status.
+    /// 根据电池状态确定电池图标的颜色
     var batteryColor: Color {
         if isInLowPowerMode {
             return .yellow

@@ -47,11 +47,11 @@ extension NSItemProvider {
                     let folderURL = url.deletingLastPathComponent()
 
                     do {
-                        // Delete the file first
+                        // 先删除该文件
                         try fileManager.removeItem(at: url)
                         print("Deleted file: \(url.path)")
 
-                        // Check folder contents
+                        // 检查文件夹内容
                         let contents = try fileManager.contentsOfDirectory(atPath: folderURL.path)
                         if contents.isEmpty {
                             try fileManager.removeItem(at: folderURL)
@@ -118,12 +118,12 @@ extension NSItemProvider {
                         if let url = URL(string: string) {
                             resolvedURL = url
                         } else if string.hasPrefix("/") {
-                            // Plain file system path
+                            // 纯文件系统路径
                             resolvedURL = URL(fileURLWithPath: string)
                         }
                     }
                     if resolvedURL == nil {
-                        // Fallback: try treating the data as a bookmark
+                        // 回退：尝试把数据当作书签处理
                         let bookmark = Bookmark(data: data)
                         resolvedURL = bookmark.resolveURL()
                     }

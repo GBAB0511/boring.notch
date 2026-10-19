@@ -9,7 +9,7 @@ import AppKit
 import CoreGraphics
 
 extension NSScreen {
-    /// Returns a persistent UUID for this display
+    /// 返回此显示器的持久化 UUID
     var displayUUID: String? {
         guard let number = deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
             return nil
@@ -22,18 +22,18 @@ extension NSScreen {
         return uuidString
     }
     
-    /// Find a screen by its UUID
+    /// 通过 UUID 查找屏幕
     @MainActor static func screen(withUUID uuid: String) -> NSScreen? {
         return NSScreenUUIDCache.shared.screen(forUUID: uuid)
     }
     
-    /// Get UUID to NSScreen mapping for all screens
+    /// 获取所有屏幕的 UUID → NSScreen 映射
     @MainActor static var screensByUUID: [String: NSScreen] {
         return NSScreenUUIDCache.shared.allScreens
     }
 }
 
-/// Cache for UUID to NSScreen mappings to avoid repeated lookups
+/// UUID → NSScreen 映射的缓存，避免重复查找
 @MainActor
 final class NSScreenUUIDCache {
     static let shared = NSScreenUUIDCache()

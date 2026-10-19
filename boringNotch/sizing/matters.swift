@@ -37,7 +37,7 @@ enum MusicPlayerImageSizes {
 }
 
 @MainActor func getClosedNotchSize(screenUUID: String? = nil) -> CGSize {
-    // Default notch size, to avoid using optionals
+    // 默认刘海尺寸，避免使用可选值
     var notchHeight: CGFloat = Defaults[.nonNotchHeight]
     var notchWidth: CGFloat = 185
 
@@ -47,26 +47,28 @@ enum MusicPlayerImageSizes {
         selectedScreen = NSScreen.screen(withUUID: uuid)
     }
 
-    // Check if the screen is available
+    // 检查屏幕是否可用
     if let screen = selectedScreen {
-        // Calculate and set the exact width of the notch
+        // 精确计算刘海宽度：屏幕总宽减去左右两侧安全区（刘海两侧的 padding），再加 4 点容差
         if let topLeftNotchpadding: CGFloat = screen.auxiliaryTopLeftArea?.width,
            let topRightNotchpadding: CGFloat = screen.auxiliaryTopRightArea?.width
         {
             notchWidth = screen.frame.width - topLeftNotchpadding - topRightNotchpadding + 4
         }
 
-        // Check if the Mac has a notch
+        // 判断这台 Mac 是否有刘海：safeAreaInsets.top > 0 表示屏幕顶部有安全区（即存在刘海）
         if screen.safeAreaInsets.top > 0 {
-            // This is a display WITH a notch - use notch height settings
+            // 有刘海的显示器——使用「刘海高度」设置
             notchHeight = Defaults[.notchHeight]
             if Defaults[.notchHeightMode] == .matchRealNotchSize {
+                // 匹配真实刘海尺寸：直接取屏幕顶部安全区高度
                 notchHeight = screen.safeAreaInsets.top
             } else if Defaults[.notchHeightMode] == .matchMenuBar {
+                // 匹配菜单栏高度：取屏幕坐标原点与可见区域之间的差值
                 notchHeight = screen.frame.maxY - screen.visibleFrame.maxY
             }
         } else {
-            // This is a display WITHOUT a notch - use non-notch height settings
+            // 无刘海的显示器——使用「非刘海高度」设置
             notchHeight = Defaults[.nonNotchHeight]
             if Defaults[.nonNotchHeightMode] == .matchMenuBar {
                 notchHeight = screen.frame.maxY - screen.visibleFrame.maxY

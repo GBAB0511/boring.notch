@@ -7,7 +7,7 @@ class BoringStatusMenu: NSMenu {
     override init() {
         super.init()
         
-        // Initialize the status item
+        // 初始化状态栏图标
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusItem.button {
@@ -15,7 +15,7 @@ class BoringStatusMenu: NSMenu {
             button.action = #selector(showMenu)
         }
         
-        // Set up the menu
+        // 设置菜单
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitAction), keyEquivalent: "q"))
         statusItem.menu = menu

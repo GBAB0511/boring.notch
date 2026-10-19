@@ -13,7 +13,7 @@ struct CameraPreviewView: View {
     @EnvironmentObject var vm: BoringViewModel
     @ObservedObject var webcamManager: WebcamManager
     
-    // Track if authorization request is in progress to avoid multiple requests
+    // 跟踪授权请求是否正在进行，以避免重复请求
     @State private var isRequestingAuthorization: Bool = false
 
     var body: some View {
@@ -56,7 +56,7 @@ struct CameraPreviewView: View {
     
     private func handleCameraTap() {
         if isRequestingAuthorization {
-            return // Prevent multiple authorization requests
+            return // 防止重复的授权请求
         }
         
         switch webcamManager.authorizationStatus {
@@ -83,7 +83,7 @@ struct CameraPreviewView: View {
         case .notDetermined:
             isRequestingAuthorization = true
             webcamManager.checkAndRequestVideoAuthorization()
-            // Reset the request flag after a reasonable delay
+            // 延迟一段时间后重置请求标志
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 isRequestingAuthorization = false
             }

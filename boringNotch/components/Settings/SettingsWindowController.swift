@@ -33,7 +33,7 @@ class SettingsWindowController: NSWindowController {
     
     func setUpdaterController(_ controller: SPUStandardUpdaterController) {
         self.updaterController = controller
-        // Recreate the content view with the proper updater controller
+        // 用正确的更新控制器重建内容视图
         setupWindow()
     }
     
@@ -46,31 +46,31 @@ class SettingsWindowController: NSWindowController {
         window.toolbarStyle = .unified
         window.isMovableByWindowBackground = true
         
-        // Make it behave like a regular app window with proper Spaces support
+        // 使其像普通应用窗口一样运行，并正确支持 Spaces
         window.collectionBehavior = [.managed, .participatesInCycle, .fullScreenAuxiliary]
         
-        // Ensure proper window behavior
+        // 确保窗口行为正确
         window.hidesOnDeactivate = false
         window.isExcludedFromWindowsMenu = false
         
-        // Configure window to be a standard document-style window
+        // 将窗口配置为标准文档式窗口
         window.isRestorable = true
         window.identifier = NSUserInterfaceItemIdentifier("BoringNotchSettingsWindow")
         
-        // Create the SwiftUI content
+        // 创建 SwiftUI 内容
         let settingsView = SettingsView(updaterController: updaterController)
         let hostingView = NSHostingView(rootView: settingsView)
         window.contentView = hostingView
         
-        // Handle window closing
+        // 处理窗口关闭
         window.delegate = self
     }
     
     func showWindow() {
-        // Set app to regular mode first
+        // 先将应用设为常规模式
         NSApp.setActivationPolicy(.regular)
         
-        // If window is already visible, bring it to front properly
+        // 若窗口已可见，则正确地将其置前
         if window?.isVisible == true {
             NSApp.activate(ignoringOtherApps: true)
             window?.orderFrontRegardless()
@@ -78,15 +78,15 @@ class SettingsWindowController: NSWindowController {
             return
         }
         
-        // Show the window with proper ordering
+        // 以正确顺序显示窗口
         window?.orderFrontRegardless()
         window?.makeKeyAndOrderFront(nil)
         window?.center()
         
-        // Activate the app and ensure window gets focus
+        // 激活应用并确保窗口获得焦点
         NSApp.activate(ignoringOtherApps: true)
         
-        // Force window to front after activation
+        // 激活后强制窗口置前
         DispatchQueue.main.async { [weak self] in
             self?.window?.makeKeyAndOrderFront(nil)
         }
@@ -100,7 +100,7 @@ class SettingsWindowController: NSWindowController {
     private func relinquishFocus() {
         window?.orderOut(nil)
         
-        // Set app back to accessory mode immediately
+        // 立即将应用设回辅助模式
         NSApp.setActivationPolicy(.accessory)
     }
 }
@@ -115,7 +115,7 @@ extension SettingsWindowController: NSWindowDelegate {
     }
     
     func windowDidBecomeKey(_ notification: Notification) {
-        // Ensure app is in regular mode when window becomes key
+        // 窗口成为主窗口时确保应用处于常规模式
         NSApp.setActivationPolicy(.regular)
     }
     

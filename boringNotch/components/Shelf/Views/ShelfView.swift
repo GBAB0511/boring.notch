@@ -25,7 +25,7 @@ struct ShelfView: View {
                     handleDrop(providers: providers)
                 }
         }
-        // Bind Quick Look to shelf selection
+        // 将 Quick Look 绑定到货架选中项
         .onChange(of: selection.selectedIDs) {
             updateQuickLookSelection()
         }

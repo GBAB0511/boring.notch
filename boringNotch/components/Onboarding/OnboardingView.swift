@@ -142,7 +142,7 @@ struct OnboardingView: View {
         .frame(width: 400, height: 600)
     }
 
-    // MARK: - Permission Request Logic
+    // MARK: - 权限请求逻辑
 
     func requestCameraPermission() async {
         await AVCaptureDevice.requestAccess(for: .video)

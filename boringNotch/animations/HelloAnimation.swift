@@ -110,7 +110,7 @@ struct HelloAnimation: View {
             shape: { HelloShape() }
         )
         .task {
-            // Wait for the "opening" animation (notch expansion) to complete before starting the snake
+            // 等待「展开」动画（刘海扩张）完成后再开始绘制光蛇
             try? await Task.sleep(for: .seconds(0.6))
             
             withAnimation(
@@ -119,7 +119,7 @@ struct HelloAnimation: View {
                 progress = 1.0
             }
             
-            // Wait for the animation to complete
+            // 等待动画完成
             try? await Task.sleep(for: .seconds(4.0))
             
             onFinish()

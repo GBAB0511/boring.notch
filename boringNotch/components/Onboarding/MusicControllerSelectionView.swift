@@ -51,7 +51,7 @@ struct MusicControllerSelectionView: View {
                 }
                 .padding()
             }
-            //Disable scroll if there are 4 or fewer to avoid unnecessary scroll behavior
+            // 当控制器少于等于 4 个时禁用滚动，避免不必要的滚动行为
             .scrollDisabled(availableMediaControllers.count <= 4)
 
 //            Spacer()

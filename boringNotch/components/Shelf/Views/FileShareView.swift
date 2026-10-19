@@ -56,7 +56,7 @@ struct FileShareView: View {
                 )
                 .shadow(color: Color.black.opacity(0.6), radius: 6, x: 0, y: 2)
 
-            // Content
+            // 内容
             VStack(spacing: 5) {
                 ZStack {
                     Circle()
@@ -91,7 +91,7 @@ struct FileShareView: View {
             }
             .padding(18)
             
-            // Loading overlay
+            // 加载遮罩
             if isProcessing || quickShare.isPickerOpen {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(.black.opacity(0.3))
@@ -105,7 +105,7 @@ struct FileShareView: View {
         .contentShape(RoundedRectangle(cornerRadius: 12))
     }
 
-    // MARK: - Actions
+    // MARK: - 操作
 
     private func handleDrop(_ providers: [NSItemProvider]) async {
         isProcessing = true
@@ -118,7 +118,7 @@ struct FileShareView: View {
     }
 }
 
-// MARK: - Host NSView extractor for anchoring share sheet
+// MARK: - 用于锚定分享面板的宿主 NSView 提取器
 
 private struct NSViewHost: NSViewRepresentable {
     @Binding var view: NSView?

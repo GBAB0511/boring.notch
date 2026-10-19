@@ -37,7 +37,7 @@ struct ContentView: View {
 
     @Default(.showNotHumanFace) var showNotHumanFace
 
-    // Shared interactive spring for movement/resizing to avoid conflicting animations
+    // 共享的交互式弹簧动画，用于移动/缩放，避免动画之间相互冲突
     private let animationSpring = Animation.interactiveSpring(response: 0.38, dampingFraction: 0.8, blendDuration: 0)
 
     private let extendedHoverPadding: CGFloat = 30
@@ -81,7 +81,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        // Calculate scale based on gesture progress only
+        // 仅根据手势进度计算缩放比例（0 表示无手势，返回 1.0）
         let gestureScale: CGFloat = {
             guard gestureProgress != 0 else { return 1.0 }
             let scaleFactor = 1.0 + gestureProgress * 0.01
@@ -321,7 +321,7 @@ struct ContentView: View {
                               .padding(.leading, 4)
                               .padding(.trailing, 8)
                           }
-                          // Old sneak peek music
+                          // 旧版「偷看」音乐提示（标准样式下显示歌名跑马灯）
                           else if coordinator.sneakPeek.type == .music {
                               if vm.notchState == .closed && !vm.hideOnClosed && Defaults[.sneakPeekStyles] == .standard {
                                   HStack(alignment: .center) {
@@ -421,7 +421,7 @@ struct ContentView: View {
                                     ? 1 : 0
                             )
                             Spacer(minLength: vm.closedNotchSize.width)
-                            // Song Artist
+                            // 歌曲演唱者
                             Text(musicManager.artistName)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
@@ -502,14 +502,17 @@ struct ContentView: View {
         }
     }
 
+    // 展开刘海：用交互式弹簧动画打开
     private func doOpen() {
         withAnimation(animationSpring) {
             vm.open()
         }
     }
 
-    // MARK: - Hover Management
+    // MARK: - 悬停管理
 
+    // 处理鼠标悬停：悬停超过阈值时长则打开刘海，移出则关闭。
+    // 首次启动（引导流程中）不响应悬停。
     private func handleHover(_ hovering: Bool) {
         if coordinator.firstLaunch { return }
         hoverTask?.cancel()
@@ -557,8 +560,9 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Gesture Handling
+    // MARK: - 手势处理
 
+    // 下滑手势：位移超过 gestureSensitivity 阈值 → 打开刘海（带触觉反馈）
     private func handleDownGesture(translation: CGFloat, phase: NSEvent.Phase) {
         guard vm.notchState == .closed else { return }
 
@@ -582,6 +586,7 @@ struct ContentView: View {
         }
     }
 
+    // 上滑手势：位移超过阈值 → 关闭刘海（悬停日历时不响应，避免误触）
     private func handleUpGesture(translation: CGFloat, phase: NSEvent.Phase) {
         guard vm.notchState == .open && !vm.isHoveringCalendar else { return }
 

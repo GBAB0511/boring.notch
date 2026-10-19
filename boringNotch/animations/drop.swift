@@ -24,6 +24,6 @@ public class BoringAnimations {
         }
     }
     
-    // TODO: Move all animations to this file
+    // TODO: 将所有动画迁移到此文件
     
 }

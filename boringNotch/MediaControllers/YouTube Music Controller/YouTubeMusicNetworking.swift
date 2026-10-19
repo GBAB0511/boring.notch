@@ -7,7 +7,7 @@
 
 import Foundation
 
-// MARK: - HTTP Client
+// MARK: - HTTP 客户端
 final class YouTubeMusicHTTPClient: ObservableObject {
     private let session: URLSession
     private let baseURL: String
@@ -26,7 +26,7 @@ final class YouTubeMusicHTTPClient: ObservableObject {
         self.session = URLSession(configuration: config)
     }
     
-    // MARK: - Authentication
+    // MARK: - 认证
     func authenticate() async throws -> String {
         guard let url = URL(string: "\(baseURL)/auth/boringNotch") else {
             throw YouTubeMusicError.invalidURL
@@ -42,7 +42,7 @@ final class YouTubeMusicHTTPClient: ObservableObject {
         return authResponse.accessToken
     }
     
-    // MARK: - Playback Info
+    // MARK: - 播放信息
     func getPlaybackInfo(token: String) async throws -> PlaybackResponse {
         let data = try await sendCommand(
             endpoint: "/song",
@@ -52,7 +52,7 @@ final class YouTubeMusicHTTPClient: ObservableObject {
         return try Self.decoder.decode(PlaybackResponse.self, from: data)
     }
 
-    // MARK: - Like / Favourites
+    // MARK: - 喜欢 / 收藏
     struct LikeStateResponse: Decodable, Sendable {
         let state: String?
     }
@@ -71,7 +71,7 @@ final class YouTubeMusicHTTPClient: ObservableObject {
         return try await sendCommand(endpoint: "/dislike", method: "POST", token: token)
     }
     
-    // MARK: - Commands
+    // MARK: - 命令
     func sendCommand(
         endpoint: String,
         method: String = "POST",
@@ -91,7 +91,7 @@ final class YouTubeMusicHTTPClient: ObservableObject {
         return data
     }
     
-    // MARK: - Private Helpers
+    // MARK: - 私有辅助方法
     private func createAuthenticatedRequest(
         endpoint: String,
         method: String,
@@ -130,7 +130,7 @@ final class YouTubeMusicHTTPClient: ObservableObject {
     }
 }
 
-// MARK: - WebSocket Client
+// MARK: - WebSocket 客户端
 actor YouTubeMusicWebSocketClient {
     private var task: URLSessionWebSocketTask?
     private let session: URLSession
@@ -194,7 +194,7 @@ actor YouTubeMusicWebSocketClient {
     }
 }
 
-// MARK: - WebSocket URL Helper
+// MARK: - WebSocket URL 辅助
 struct WebSocketURLBuilder {
     static func buildURL(from baseURL: String) -> URL? {
         guard var components = URLComponents(string: baseURL) else { return nil }
@@ -213,7 +213,7 @@ struct WebSocketURLBuilder {
     }
 }
 
-// MARK: - Errors
+// MARK: - 错误类型
 enum YouTubeMusicError: Error, LocalizedError, Sendable {
     case invalidURL
     case invalidResponse

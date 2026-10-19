@@ -40,7 +40,7 @@ enum ProgressIndicatorType {
 }
 
 
-    // based on type .circle or .text
+    // 根据类型 .circle 或 .text 显示不同样式
 struct ProgressIndicator: View {
     var type: ProgressIndicatorType
     var progress: Double

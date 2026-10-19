@@ -12,10 +12,10 @@ struct Config: Equatable {
     //    var count: Int = 10  // 3 days past + today + 7 days future
     var past: Int = 7
     var future: Int = 14
-    var steps: Int = 1  // Each step is one day
+    var steps: Int = 1  // 每个步长代表一天
     var spacing: CGFloat = 0
     var showsText: Bool = true
-    var offset: Int = 2  // Number of dates to the left of the selected date
+    var offset: Int = 2  // 选中日期左侧显示的日期数量
 }
 
 struct WheelPicker: View {
@@ -34,7 +34,7 @@ struct WheelPicker: View {
                 let totalItems = dateCount + 2 * spacerNum
                 ForEach(0..<totalItems, id: \.self) { index in
                     if index < spacerNum || index >= spacerNum + dateCount {
-                        // Leading/trailing spacers sized to match a date cell
+                        // 前导/尾随的占位 spacer，尺寸与日期单元格一致
                         Spacer()
                             .frame(width: 24, height: 24)
                             .id(index)
@@ -59,7 +59,7 @@ struct WheelPicker: View {
         }
         .scrollIndicators(.never)
         .scrollPosition(id: $scrollPosition, anchor: .center)
-        .scrollTargetBehavior(.viewAligned)  // Ensures scroll view snaps the centered view
+        .scrollTargetBehavior(.viewAligned)  // 确保滚动视图吸附到居中的视图
         .safeAreaPadding(.horizontal)
         .sensoryFeedback(.alignment, trigger: haptics)
         .onChange(of: scrollPosition) { oldValue, newValue in
@@ -72,7 +72,7 @@ struct WheelPicker: View {
         .onAppear {
             scrollToToday(config: config)
         }
-        // When parent updates the bound selectedDate (e.g., view reopen), center the wheel on it
+        // 当父视图更新绑定的 selectedDate（如视图重新打开）时，将滚轮居中到该日期
         .onChange(of: selectedDate) { _, newValue in
             let targetIndex = indexForDate(newValue)
             if scrollPosition != targetIndex {
@@ -145,7 +145,7 @@ struct WheelPicker: View {
         selectedDate = today
     }
 
-    // MARK: - Index/Date mapping with steps and spacers
+    // MARK: - 索引/日期映射（含步长与偏移占位）
     private func indexForDate(_ date: Date) -> Int {
         let spacerNum = config.offset
         let cal = Calendar.current
@@ -278,7 +278,7 @@ struct EventListView: View {
                     return !completed || !Defaults[.hideCompletedReminders]
                 }
             }
-            // Filter out all-day events if setting is enabled
+            // 若启用了「隐藏全天事件」设置，则过滤掉全天事件
             if event.isAllDay && Defaults[.hideAllDayEvents] {
                 return false
             }
@@ -292,10 +292,10 @@ struct EventListView: View {
 
     private func scrollToRelevantEvent(proxy: ScrollViewProxy) {
         let now = Date()
-        // Determine a single target using preferred search order:
-        // 1) first non-all-day upcoming/in-progress event
-        // 2) first all-day event
-        // 3) last event (fallback)
+        // 按优先搜索顺序确定单个目标：
+        // 1) 第一个非全天且即将开始/进行中的事件
+        // 2) 第一个全天事件
+        // 3) 最后一个事件（兜底）
         let nonAllDayUpcoming = filteredEvents.first(where: { !$0.isAllDay && $0.end > now })
         let firstAllDay = filteredEvents.first(where: { $0.isAllDay })
         let lastEvent = filteredEvents.last
@@ -364,7 +364,7 @@ struct EventListView: View {
                         ),
                         color: Color(event.calendar.color)
                     )
-                    .opacity(1.0)  // Ensure the toggle is always fully opaque
+                    .opacity(1.0)  // 确保开关始终完全不透明
                     HStack {
                         Text(event.title)
                             .font(.callout)
@@ -451,11 +451,11 @@ struct ReminderToggle: View {
             isOn.toggle()
         }) {
             ZStack {
-                // Outer ring
+                // 外圈
                 Circle()
                     .strokeBorder(color, lineWidth: 2)
                     .frame(width: 14, height: 14)
-                // Inner fill
+                // 内部填充
                 if isOn {
                     Circle()
                         .fill(color)

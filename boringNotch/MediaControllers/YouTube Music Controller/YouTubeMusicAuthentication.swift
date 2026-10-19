@@ -7,7 +7,7 @@
 
 import Foundation
 
-// MARK: - Authentication Manager
+// MARK: - 认证管理器
 actor YouTubeMusicAuthManager {
     private var accessToken: String?
     private var authenticationTask: Task<String, Error>?
@@ -22,17 +22,17 @@ actor YouTubeMusicAuthManager {
     }
     
     func authenticate() async throws -> String {
-        // Return existing token if valid
+        // 若已有有效令牌则直接返回
         if let token = accessToken {
             return token
         }
         
-        // Wait for ongoing authentication if in progress
+        // 若已有认证正在进行则等待其结果
         if let task = authenticationTask {
             return try await task.value
         }
         
-        // Start new authentication
+        // 开始新的认证
         let task = Task<String, Error> {
             do {
                 let token = try await httpClient.authenticate()
@@ -64,7 +64,7 @@ actor YouTubeMusicAuthManager {
     }
 }
 
-// MARK: - Authentication State
+// MARK: - 认证状态
 enum AuthenticationState: Sendable {
     case unauthenticated
     case authenticating

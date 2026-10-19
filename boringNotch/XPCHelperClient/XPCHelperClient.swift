@@ -17,7 +17,7 @@ final class XPCHelperClient: NSObject {
         stopMonitoringAccessibilityAuthorization()
     }
     
-    // MARK: - Connection Management (Main Actor Isolated)
+    // MARK: - 连接管理（主 Actor 隔离）
     
     @MainActor
     private func ensureRemoteService() -> RemoteXPCService<BoringNotchXPCHelperProtocol> {
@@ -69,14 +69,14 @@ final class XPCHelperClient: NSObject {
         )
     }
 
-    // MARK: - Monitoring
+    // MARK: - 监听
     nonisolated func startMonitoringAccessibilityAuthorization(every interval: TimeInterval = 3.0) {
-        // Ensure only one monitor exists
+        // 确保仅存在一个监听器
         stopMonitoringAccessibilityAuthorization()
         monitoringTask = Task.detached { [weak self] in
             guard let self = self else { return }
             while !Task.isCancelled {
-                // Call the helper method periodically which will notify on change
+                // 周期性调用辅助方法，变更时会发出通知
                 _ = await self.isAccessibilityAuthorized()
                 do {
                     try await Task.sleep(for: .seconds(interval))
@@ -90,12 +90,12 @@ final class XPCHelperClient: NSObject {
         monitoringTask = nil
     }
 
-    // Expose whether the client is actively monitoring (useful for tests/debug)
+    // 暴露客户端是否正在监听（便于测试/调试）
     var isMonitoring: Bool {
         return monitoringTask != nil
     }
     
-    // MARK: - Accessibility
+    // MARK: - 辅助功能
     
     nonisolated func requestAccessibilityAuthorization() {
         Task {
@@ -146,7 +146,7 @@ final class XPCHelperClient: NSObject {
         }
     }
     
-    // MARK: - Keyboard Brightness
+    // MARK: - 键盘亮度
     
     nonisolated func isKeyboardBrightnessAvailable() async -> Bool {
         do {
@@ -194,7 +194,7 @@ final class XPCHelperClient: NSObject {
         }
     }
     
-    // MARK: - Screen Brightness
+    // MARK: - 屏幕亮度
     
     nonisolated func isScreenBrightnessAvailable() async -> Bool {
         do {

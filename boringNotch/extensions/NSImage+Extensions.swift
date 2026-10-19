@@ -74,7 +74,7 @@ extension NSImage {
             var finalColor: NSColor
             
             if isNearBlack {
-                // If it's near black, just return a gray color with the minimum brightness
+                // 若接近黑色，直接返回具有最低亮度的灰色
                 finalColor = NSColor(white: minBrightness, alpha: 1.0)
             } else {
                 var color = NSColor(red: averageRed, green: averageGreen, blue: averageBlue, alpha: 1.0)
@@ -87,7 +87,7 @@ extension NSImage {
                 color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
                 
                 if brightness < minBrightness {
-                    // Increase brightness while maintaining hue and reducing saturation
+                    // 提高亮度，同时保持色相并降低饱和度
                     let saturationScale = brightness / minBrightness
                     color = NSColor(hue: hue,
                                     saturation: saturation * saturationScale,
@@ -139,14 +139,14 @@ extension NSImage {
 extension Color {
     func ensureMinimumBrightness(factor: CGFloat) -> Color {
         guard factor >= 0 && factor <= 1 else {
-            return self // Return original color if factor is out of bounds
+            return self // 若 factor 超出范围则返回原色
         }
         
         let nsColor = NSColor(self)
         
-        // Convert to RGB color space
+        // 转换为 RGB 颜色空间
         guard let rgbColor = nsColor.usingColorSpace(.sRGB) else {
-            return self // Return original color if conversion fails
+            return self // 转换失败则返回原色
         }
         
         var red: CGFloat = 0

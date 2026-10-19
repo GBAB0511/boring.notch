@@ -95,7 +95,7 @@ struct SettingsView: View {
                     if let controller = updaterController {
                         About(updaterController: controller)
                     } else {
-                        // Fallback with a default controller
+                        // 用默认控制器回退
                         About(
                             updaterController: SPUStandardUpdaterController(
                                 startingUpdater: false, updaterDelegate: nil,
@@ -628,7 +628,7 @@ struct Media: View {
                             destination: URL(string: "https://github.com/pear-devs/pear-desktop")!
                         )
                         .font(.caption)
-                        .foregroundColor(.blue)  // Ensures it's visibly a link
+                        .foregroundColor(.blue)  // 确保它看起来明显是个链接
                     }
                 } else {
                     Text(
@@ -697,7 +697,7 @@ struct Media: View {
         .navigationTitle("Media")
     }
 
-    // Only show controller options that are available on this macOS version
+    // 仅显示当前 macOS 版本可用的控制器选项
     private var availableMediaControllers: [MediaControllerType] {
         if MusicManager.shared.isNowPlayingDeprecated {
             return MediaControllerType.allCases.filter { $0 != .nowPlaying }
@@ -1001,7 +1001,7 @@ struct Shelf: View {
                     }
                     .padding(.vertical, 4)
                 }
-                // Providers are always enabled; user can pick default service above.
+                // 提供者始终启用；用户可在上方选择默认服务。
                 
             } header: {
                 HStack {
@@ -1421,7 +1421,7 @@ struct Advanced: View {
     let icons: [String] = ["logo2"]
     @State private var selectedIcon: String = "logo2"
     
-    // macOS accent colors
+    // macOS 强调色
     enum PresetAccentColor: String, CaseIterable, Identifiable {
         case blue = "Blue"
         case purple = "Purple"
@@ -1452,7 +1452,7 @@ struct Advanced: View {
         Form {
             Section {
                 VStack(alignment: .leading, spacing: 16) {
-                    // Toggle between system and custom
+                    // 在系统与自定义之间切换
                     Picker("Accent color", selection: $useCustomAccentColor) {
                         Text("System").tag(false)
                         Text("Custom").tag(true)
@@ -1460,7 +1460,7 @@ struct Advanced: View {
                     .pickerStyle(.segmented)
                     
                     if !useCustomAccentColor {
-                        // System accent info
+                        // 系统强调色信息
                         VStack(alignment: .leading, spacing: 8) {
                             HStack(spacing: 12) {
                                 AccentCircleButton(
@@ -1480,7 +1480,7 @@ struct Advanced: View {
                             }
                         }
                     } else {
-                        // Custom color options
+                        // 自定义颜色选项
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Color Presets")
                                 .font(.caption)
@@ -1506,7 +1506,7 @@ struct Advanced: View {
                             Divider()
                                 .padding(.vertical, 4)
                             
-                            // Custom color picker
+                            // 自定义颜色选择器
                             HStack(spacing: 12) {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Pick a Color")
@@ -1637,7 +1637,7 @@ struct Advanced: View {
     }
     
     private func forceUiUpdate() {
-        // Force refresh the UI
+        // 强制刷新 UI
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: Notification.Name("AccentColorChanged"), object: nil)
         }
@@ -1656,7 +1656,7 @@ struct Advanced: View {
            let nsColor = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: colorData) {
             customAccentColor = Color(nsColor: nsColor)
             
-            // Check if loaded color matches a preset
+            // 检查加载的颜色是否匹配某个预设
             selectedPresetColor = nil
             for preset in PresetAccentColor.allCases {
                 if colorsAreEqual(Color(nsColor: nsColor), preset.color) {
@@ -1678,14 +1678,14 @@ struct Advanced: View {
     
     private func initializeAccentColorState() {
         if !useCustomAccentColor {
-            selectedPresetColor = nil // Multicolor is selected when useCustomAccentColor is false
+            selectedPresetColor = nil // 未使用自定义强调色时选中「多彩」
         } else {
             loadCustomColor()
         }
     }
 }
 
-// MARK: - Accent Circle Button Component
+// MARK: - 强调色圆形按钮组件
 struct AccentCircleButton: View {
     let isSelected: Bool
     let color: Color
@@ -1696,17 +1696,17 @@ struct AccentCircleButton: View {
     var body: some View {
         Button(action: action) {
             ZStack {
-                // Color circle
+                // 颜色圆圈
                 Circle()
                     .fill(color)
                     .frame(width: 32, height: 32)
                 
-                // Subtle border
+                // 细微边框
                 Circle()
                     .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1)
                     .frame(width: 32, height: 32)
                 
-                // Apple-style highlight ring around the middle when selected
+                // 选中时中间的 Apple 风格高亮环
                 if isSelected {
                     Circle()
                         .strokeBorder(

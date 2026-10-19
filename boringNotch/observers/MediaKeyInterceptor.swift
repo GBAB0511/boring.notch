@@ -32,7 +32,7 @@ final class MediaKeyInterceptor {
     
     private init() {}
     
-    // MARK: - Accessibility (via XPC)
+    // MARK: - 辅助功能（经 XPC）
     
     func requestAccessibilityAuthorization() {
         XPCHelperClient.shared.requestAccessibilityAuthorization()
@@ -42,18 +42,18 @@ final class MediaKeyInterceptor {
         await XPCHelperClient.shared.ensureAccessibilityAuthorization(promptIfNeeded: promptIfNeeded)
     }
     
-    // MARK: - Event Tap
+    // MARK: - 事件监听（Event Tap）
     
     func start(promptIfNeeded: Bool = false) async {
         guard eventTap == nil else { return }
         
-        // Ensure HUD replacement is enabled
+        // 确保已启用 HUD 替换
         guard Defaults[.hudReplacement] else {
             stop()
             return
         }
         
-        // Check accessibility authorization
+        // 检查辅助功能授权
         let authorized = await XPCHelperClient.shared.isAccessibilityAuthorized()
         if !authorized {
             if promptIfNeeded {
@@ -98,10 +98,10 @@ final class MediaKeyInterceptor {
         eventTap = nil
     }
     
-    // MARK: - Event Handling
+    // MARK: - 事件处理
     
     private func handleEvent(_ cgEvent: CGEvent) -> Unmanaged<CGEvent>? {
-        // Ensure the CGEvent has a valid type before converting to NSEvent
+        // 转换为 NSEvent 前确保 CGEvent 类型有效
         guard cgEvent.type != .null else {
             return Unmanaged.passRetained(cgEvent)
         }
@@ -115,7 +115,7 @@ final class MediaKeyInterceptor {
         let keyCode = (data1 & 0xFFFF_0000) >> 16
         let stateByte = ((data1 & 0xFF00) >> 8)
         
-        // 0xA = key down, 0xB = key up. Only handle key down.
+        // 0xA 表示按下，0xB 表示抬起；仅处理按下事件
         guard stateByte == 0xA,
               let keyType = NXKeyType(rawValue: keyCode) else {
             return Unmanaged.passRetained(cgEvent)
@@ -126,14 +126,14 @@ final class MediaKeyInterceptor {
         let shift = flags.contains(.shift)
         let command = flags.contains(.command)
         
-        // Handle option key action (without shift)
+        // 处理 Option 键动作（不含 Shift）
         if option && !shift {
             if handleOptionAction(for: keyType, command: command) {
                 return nil
             }
         }
         
-        // Handle normal key press
+        // 处理普通按键
         handleKeyPress(keyType: keyType, option: option, shift: shift, command: command)
         return nil
     }

@@ -21,10 +21,11 @@ struct DynamicNotchApp: App {
     let updaterController: SPUStandardUpdaterController
 
     init() {
+        // 初始化 Sparkle 自动更新控制器（启动时即开始检查更新）
         updaterController = SPUStandardUpdaterController(
             startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
 
-        // Initialize the settings window controller with the updater controller
+        // 用更新控制器初始化设置窗口控制器，使设置页的「检查更新」可用
         SettingsWindowController.shared.setUpdaterController(updaterController)
     }
 
@@ -51,8 +52,10 @@ struct DynamicNotchApp: App {
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
-    var windows: [String: NSWindow] = [:] // UUID -> NSWindow
-    var viewModels: [String: BoringViewModel] = [:] // UUID -> BoringViewModel
+    // 显示器 UUID → 刘海窗口（多显示器模式下每个屏幕一个窗口）
+    var windows: [String: NSWindow] = [:]
+    // 显示器 UUID → 刘海视图模型（与窗口一一对应）
+    var viewModels: [String: BoringViewModel] = [:]
     var window: NSWindow?
     let vm: BoringViewModel = .init()
     @ObservedObject var coordinator = BoringViewCoordinator.shared
@@ -66,7 +69,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var screenUnlockedObserver: Any?
     private var isScreenLocked: Bool = false
     private var windowScreenDidChangeObserver: Any?
-    private var dragDetectors: [String: DragDetector] = [:] // UUID -> DragDetector
+    // 显示器 UUID → 拖拽检测器（用于扩展拖拽检测区域）
+    private var dragDetectors: [String: DragDetector] = [:]
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return false
@@ -125,7 +129,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     @MainActor
     private func disableSkyLightOnAllWindows() {
-        // Delay disabling SkyLight to avoid flicker during unlock transition
+        // 延迟关闭 SkyLight，以避免解锁过渡时的闪烁
         Task {
             try? await Task.sleep(for: .milliseconds(150))
             await MainActor.run {
@@ -199,7 +203,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let notchHeight = openNotchSize.height
         let notchWidth = openNotchSize.width
         
-        // Create notch region at the top-center of the screen where an open notch would occupy
+        // 在屏幕顶部中央创建刘海区域（即展开状态下刘海所占的位置）
         let notchRegion = CGRect(
             x: screenFrame.midX - notchWidth / 2,
             y: screenFrame.maxY - notchHeight,
@@ -231,13 +235,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // 创建刘海窗口：无边框、置顶、不抢焦点，塞入 SwiftUI 根视图，并加入独立 CGSSpace。
+    // 参数：screen 目标屏幕，viewModel 与该窗口绑定的视图模型。
+    // 返回：创建好的 BoringNotchSkyLightWindow。
     private func createBoringNotchWindow(for screen: NSScreen, with viewModel: BoringViewModel) -> NSWindow {
         let rect = NSRect(x: 0, y: 0, width: windowSize.width, height: windowSize.height)
         let styleMask: NSWindow.StyleMask = [.borderless, .nonactivatingPanel, .utilityWindow, .hudWindow]
         
         let window = BoringNotchSkyLightWindow(contentRect: rect, styleMask: styleMask, backing: .buffered, defer: false)
         
-        // Enable SkyLight only when screen is locked
+        // 仅在屏幕锁定时启用 SkyLight（用于锁屏时仍显示刘海）
         if isScreenLocked {
             window.enableSkyLight()
         } else {
@@ -252,7 +259,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.orderFrontRegardless()
         NotchSpaceManager.shared.notchSpace.windows.insert(window)
 
-        // Observe when the window's screen changes so we can update drag detectors
+        // 监听窗口所在屏幕的变化，以便及时更新拖拽检测器
         windowScreenDidChangeObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.didChangeScreenNotification,
             object: window,
@@ -264,6 +271,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return window
     }
 
+    // 窗口定位：将窗口水平居中、垂直贴到目标屏幕顶部。
+    // changeAlpha=true 时先把窗口设为透明（避免跳变），定位后再恢复不透明。
     @MainActor
     private func positionWindow(_ window: NSWindow, on screen: NSScreen, changeAlpha: Bool = false) {
         if changeAlpha {
@@ -279,8 +288,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.alphaValue = 1
     }
 
+    // 应用生命周期：应用启动完成后的回调，是整个应用初始化的大本营。
+    // 依次完成：注册通知 → 注册快捷键 → 创建刘海窗口并定位 → 处理首次启动/引导流程。
     func applicationDidFinishLaunching(_ notification: Notification) {
 
+        // 监听屏幕参数变化（显示器插拔、分辨率调整等）
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(screenConfigurationDidChange),
@@ -334,7 +346,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Use closure-based observers for DistributedNotificationCenter and keep tokens for removal
+        // 使用基于闭包的观察者监听分布式通知中心，并保留令牌以便退出时移除
         screenLockedObserver = DistributedNotificationCenter.default().addObserver(
             forName: NSNotification.Name(rawValue: "com.apple.screenIsLocked"),
             object: nil, queue: .main) { [weak self] notification in
@@ -444,6 +456,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func deviceHasNotch() -> Bool {
+        // 通过 safeAreaInsets.top 判断设备是否有刘海（>0 表示有刘海）
         if #available(macOS 12.0, *) {
             for screen in NSScreen.screens {
                 if screen.safeAreaInsets.top > 0 {
@@ -478,7 +491,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if Defaults[.showOnAllDisplays] {
             let currentScreenUUIDs = Set(NSScreen.screens.compactMap { $0.displayUUID })
 
-            // Remove windows for screens that no longer exist
+            // 移除已不存在屏幕所对应的窗口（显示器被拔出）
             for uuid in windows.keys where !currentScreenUUIDs.contains(uuid) {
                 if let window = windows[uuid] {
                     window.close()
@@ -488,7 +501,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
 
-            // Create or update windows for all screens
+            // 为所有屏幕创建或更新窗口
             for screen in NSScreen.screens {
                 guard let uuid = screen.displayUUID else { continue }
                 

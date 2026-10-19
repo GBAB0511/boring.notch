@@ -65,7 +65,7 @@ struct ShelfItem: Identifiable, Codable, Equatable, Sendable {
             let bookmark = Bookmark(data: bookmarkData)
             guard let resolvedURL = bookmark.resolveURL() else { return "" }
             
-            // Check for stored data files (text blocks, weblocs, etc.) to provide friendly names
+            // 检查是否为存储的数据文件（文本块、网页书签等），以提供友好的显示名称
             if resolvedURL.pathExtension.lowercased() == "json" && resolvedURL.path.contains("TextBlocks") {
                 do {
                     let data = try Data(contentsOf: resolvedURL)
@@ -89,7 +89,7 @@ struct ShelfItem: Identifiable, Codable, Equatable, Sendable {
                         return textData.displayTitle
                     }
                 } catch {
-                    // Fall through to default naming
+                    // 解析失败则回退到默认命名逻辑
                 }
             } else if resolvedURL.pathExtension.lowercased() == "webloc" && resolvedURL.path.contains("WebLocs") {
                 do {
@@ -100,7 +100,7 @@ struct ShelfItem: Identifiable, Codable, Equatable, Sendable {
                         return title ?? urlString
                     }
                 } catch {
-                    // Fall through to default naming
+                    // 解析失败则回退到默认命名逻辑
                 }
             }
             return (try? resolvedURL.resourceValues(forKeys: [.localizedNameKey]).localizedName) ?? resolvedURL.lastPathComponent
@@ -146,7 +146,7 @@ struct ShelfItem: Identifiable, Codable, Equatable, Sendable {
         
         let url = context.url
         
-        // Handle temporary files
+        // 处理临时文件
         if isTemporary {
             TemporaryFileStorageService.shared.removeTemporaryFileIfNeeded(at: url)
             return
@@ -186,7 +186,7 @@ private extension ShelfItem {
     }
 }
 
-// MARK: - Identity key for deduplication
+// MARK: - 用于去重的身份标识键
 extension ShelfItem {
     var identityKey: String {
         switch kind {
@@ -203,7 +203,7 @@ extension ShelfItem {
     }
 }
 
-// MARK: - Private helpers
+// MARK: - 私有辅助方法
 private extension ShelfItemKind {
     var iconSymbolName: String {
         switch self {

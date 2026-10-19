@@ -41,7 +41,7 @@ final class ShelfItemViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Drag & Drop helpers
+    // MARK: - 拖放辅助方法
     func dragItemProvider() -> NSItemProvider {
     let selectedItems = selection.selectedItems(in: ShelfStateViewModel.shared.items)
         if selectedItems.count > 1 && selectedItems.contains(where: { $0.id == item.id }) {
@@ -96,7 +96,7 @@ final class ShelfItemViewModel: ObservableObject {
         return provider
     }
 
-    // MARK: - Actions
+    // MARK: - 操作
     func handleClick(event: NSEvent, view: NSView) {
         let flags = event.modifierFlags
         if flags.contains(.shift) {
@@ -131,7 +131,7 @@ final class ShelfItemViewModel: ObservableObject {
                 for item in ShelfSelectionModel.shared.selectedItems(in: ShelfStateViewModel.shared.items) {
                     switch item.kind {
                     case .file:
-                        // Use immediate update for user-initiated share action
+                        // 用户主动触发的分享操作，使用即时更新来刷新书签
                         if let url = ShelfStateViewModel.shared.resolveAndUpdateBookmark(for: item) {
                             itemsToShare.append(url)
                             fileURLs.append(url)
@@ -147,10 +147,10 @@ final class ShelfItemViewModel: ObservableObject {
             guard !itemsToShare.isEmpty else { return }
              
             stopSharingAccessingURLs()
-            // Start security-scoped access for all file URLs and keep it active during sharing
+            // 为所有文件 URL 开启安全作用域访问，并在整个分享期间保持激活
             sharingAccessingURLs = fileURLs.filter { $0.startAccessingSecurityScopedResource() }
             
-            // Create and retain lifecycle delegate for the entire share operation
+            // 为整个分享操作创建并持有生命周期委托
             let lifecycle = SharingStateManager.shared.makeDelegate { [weak self] in
                 self?.sharingLifecycle = nil
                 self?.stopSharingAccessingURLs()
@@ -173,12 +173,12 @@ final class ShelfItemViewModel: ObservableObject {
         sharingAccessingURLs.removeAll()
     }
 
-    /// Call this closure to request a QuickLook preview for the given URLs.
+    /// 调用此闭包以请求对给定 URL 集合进行 Quick Look 预览
     var onQuickLookRequest: (([URL]) -> Void)?
 
-    // MARK: - Context Menu helpers (extracted from view)
+    // MARK: - 上下文菜单辅助方法（从视图中抽取）
     func loadOpenWithApps() -> [URL] {
-        // Support both files and link items. For link items we ask NSWorkspace for apps that can open the URL (browsers).
+        // 同时支持文件项和链接项。对于链接项，向 NSWorkspace 询问能打开该 URL 的应用（通常是浏览器）。
         if let fileURL = item.fileURL {
             var results: [URL] = NSWorkspace.shared.urlsForApplications(toOpen: fileURL)
             if results.isEmpty {
@@ -223,7 +223,7 @@ final class ShelfItemViewModel: ObservableObject {
             return nil
         }
         let selectedFolderURLs = selectedFileURLs.filter { isDirectory($0) }
-        // URLs valid for Open/Open With (exclude folders)
+        // 用于「打开 / 打开方式」的有效 URL（排除文件夹）
         let selectedOpenableURLs = selectedItems.compactMap { itm -> URL? in
             if let u = itm.fileURL { return isDirectory(u) ? nil : u }
             if case .link(let url) = itm.kind { return url }
@@ -238,7 +238,7 @@ final class ShelfItemViewModel: ObservableObject {
             let openWith = NSMenuItem(title: "Open With", action: nil, keyEquivalent: "")
             let submenu = NSMenu()
 
-            // Choose a representative URL to compute apps (prefer current item if not a folder)
+            // 选择一个代表性 URL 来计算可用应用（若非文件夹，优先使用当前项）
             let baseURLForApps: URL? = {
                 if let u = item.fileURL, !isDirectory(u) { return u }
                 if case .link(let u) = item.kind { return u }
@@ -304,13 +304,13 @@ final class ShelfItemViewModel: ObservableObject {
         }
 
         if !selectedFileURLs.isEmpty { addMenuItem(title: "Show in Finder") }
-        // Allow Quick Look for files and link URLs
+        // 允许对文件和链接 URL 使用 Quick Look
         if !selectedFileURLs.isEmpty || !selectedLinkURLs.isEmpty {
-            // Add Quick Look menu item
+            // 添加 Quick Look 菜单项
             let quickLookItem = NSMenuItem(title: "Quick Look", action: nil, keyEquivalent: "")
             menu.addItem(quickLookItem)
             
-            // Add Slideshow as alternate menu item (shown when Option key is held)
+            // 添加幻灯片放映作为备选菜单项（按住 Option 键时显示）
             let slideshowItem = NSMenuItem(title: "Quick Look", action: nil, keyEquivalent: "")
             slideshowItem.isAlternate = true
             slideshowItem.keyEquivalentModifierMask = [.option]
@@ -320,7 +320,7 @@ final class ShelfItemViewModel: ObservableObject {
         menu.addItem(NSMenuItem.separator())
         addMenuItem(title: "Share…")
         
-        // Add image processing options for image files grouped under "Image Actions"
+        // 为图片文件添加「图片操作」分组
         let imageURLs = selectedFileURLs.filter { ImageProcessingService.shared.isImageFile($0) }
         if !imageURLs.isEmpty {
             menu.addItem(NSMenuItem.separator())
@@ -328,19 +328,19 @@ final class ShelfItemViewModel: ObservableObject {
             let imageActions = NSMenuItem(title: "Image Actions", action: nil, keyEquivalent: "")
             let imageSubmenu = NSMenu()
 
-            // Remove Background - only for single images
+            // 移除背景 - 仅支持单张图片
             if imageURLs.count == 1 {
                 let removeBg = NSMenuItem(title: "Remove Background", action: nil, keyEquivalent: "")
                 imageSubmenu.addItem(removeBg)
             }
 
-            // Convert Image - only for single images
+            // 转换图片 - 仅支持单张图片
             if imageURLs.count == 1 {
                 let convertItem = NSMenuItem(title: "Convert Image…", action: nil, keyEquivalent: "")
                 imageSubmenu.addItem(convertItem)
             }
 
-            // Create PDF - for one or more images
+            // 创建 PDF - 支持一张或多张图片
             let createPDF = NSMenuItem(title: "Create PDF", action: nil, keyEquivalent: "")
             imageSubmenu.addItem(createPDF)
 
@@ -349,7 +349,7 @@ final class ShelfItemViewModel: ObservableObject {
             menu.addItem(NSMenuItem.separator())
         }
 
-        // Add compression option for files/folders (single or multiple)
+        // 为文件/文件夹添加压缩选项（支持单个或多个）
         if !selectedFileURLs.isEmpty {
             let compressItem = NSMenuItem(title: "Compress", action: nil, keyEquivalent: "")
             menu.addItem(compressItem)
@@ -357,9 +357,9 @@ final class ShelfItemViewModel: ObservableObject {
 
         if selectedItems.count == 1, case .file(_) = item.kind { addMenuItem(title: "Rename") }
 
-        // Always show "Copy" for all item types
+        // 始终为所有项类型显示「复制」
         addMenuItem(title: "Copy")
-        // If there are file URLs, add "Copy Path" as an alternate menu item (Option key)
+        // 如果有文件 URL，则添加「复制路径」作为备选菜单项（Option 键）
         if !selectedFileURLs.isEmpty {
             let copyPathItem = NSMenuItem(title: "Copy Path", action: nil, keyEquivalent: "")
             copyPathItem.isAlternate = true
@@ -403,7 +403,7 @@ final class ShelfItemViewModel: ObservableObject {
         weak var view: NSView?
         unowned let viewModel: ShelfItemViewModel
 
-        // Keep associated objects (like accessory view handlers) without magic keys
+        // 保留关联对象（如附属视图处理器），避免使用魔法字符串键
         private static var sliderHandlerAssoc = AssociatedObject<AnyObject>()
 
         init(item: ShelfItem, view: NSView, viewModel: ShelfItemViewModel) {
@@ -456,7 +456,7 @@ final class ShelfItemViewModel: ObservableObject {
 
             switch title {
             case "Quick Look":
-                // Handle all selected items for Quick Look, not just the clicked item
+                // 对所有选中项执行 Quick Look，而非仅被点击的那一项
                 let selected = ShelfSelectionModel.shared.selectedItems(in: ShelfStateViewModel.shared.items)
                 let urls: [URL] = selected.compactMap { item in
                     if let fileURL = item.fileURL {
@@ -487,7 +487,7 @@ final class ShelfItemViewModel: ObservableObject {
                 Task {
                     let urls = await selected.asyncCompactMap { item -> URL? in
                         if case .file = item.kind {
-                            // Use immediate update for user-initiated menu action
+                            // 用户主动触发的菜单操作，使用即时更新来刷新书签
                             return await ShelfStateViewModel.shared.resolveAndUpdateBookmark(for: item)
                         }
                         return nil
@@ -511,7 +511,7 @@ final class ShelfItemViewModel: ObservableObject {
                 let selected = ShelfSelectionModel.shared.selectedItems(in: ShelfStateViewModel.shared.items)
                 let pb = NSPasteboard.general
                 
-                // Stop accessing previously copied URLs
+                // 停止访问之前复制的 URL
                 for url in ShelfItemViewModel.copiedURLs {
                     url.stopAccessingSecurityScopedResource()
                 }
@@ -526,11 +526,11 @@ final class ShelfItemViewModel: ObservableObject {
                         return nil
                     }
                     if !fileURLs.isEmpty {
-                        // Start security-scoped access for all URLs and keep them active
+                        // 为所有 URL 开启安全作用域访问并保持激活
                         ShelfItemViewModel.copiedURLs = fileURLs.filter { $0.startAccessingSecurityScopedResource() }
                         NSLog("🔐 Started security-scoped access for \(ShelfItemViewModel.copiedURLs.count) copied files")
                         
-                        // Write to pasteboard
+                        // 写入剪贴板
                         pb.writeObjects(fileURLs as [NSURL])
                     } else {
                         let strings = selected.map { $0.displayName }
@@ -560,7 +560,7 @@ final class ShelfItemViewModel: ObservableObject {
 
                 Task {
                     do {
-                        // Create ZIP in a temporary location while holding access to selected resources
+                        // 在临时位置创建 ZIP，同时保持对所选资源的安全访问
                         if let zipTempURL = try await fileURLs.accessSecurityScopedResources(accessor: { urls in
                             await TemporaryFileStorageService.shared.createZip(from: urls)
                         }) {
@@ -568,7 +568,7 @@ final class ShelfItemViewModel: ObservableObject {
                                 let newItem = ShelfItem(kind: .file(bookmark: bookmark.data), isTemporary: true)
                                 ShelfStateViewModel.shared.add([newItem])
                             } else {
-                                // Fallback: reveal the temporary file in Finder
+                                // 回退：在 Finder 中显示临时文件
                                 NSWorkspace.shared.activateFileViewerSelecting([zipTempURL])
                             }
                         }
@@ -584,7 +584,7 @@ final class ShelfItemViewModel: ObservableObject {
 
         @MainActor
         private func openWithPanel() {
-            // Support both file items and link items
+            // 同时支持文件项和链接项
             let targetURL: URL?
             let needsSecurityScope: Bool
             
@@ -613,7 +613,7 @@ final class ShelfItemViewModel: ObservableObject {
             }
             panel.directoryURL = URL(fileURLWithPath: "/Applications")
 
-            // Compute recommended applications for the selected target
+            // 计算所选目标的推荐应用
             let recommendedApps: Set<URL> = {
                 let apps: [URL]
                 if let uti = (try? fileURL.resourceValues(forKeys: [.contentTypeKey]))?.contentType {
@@ -624,7 +624,7 @@ final class ShelfItemViewModel: ObservableObject {
                 return Set(apps.map { $0.standardizedFileURL })
             }()
 
-            // Delegate to filter entries when in "Recommended Applications" mode
+            // 委托用于在「推荐应用」模式下过滤条目
             final class AppChooserDelegate: NSObject, NSOpenSavePanelDelegate {
                 enum Mode { case recommended, all }
                 var mode: Mode = .recommended
@@ -638,7 +638,7 @@ final class ShelfItemViewModel: ObservableObject {
                         case .all:
                             return true
                         case .recommended:
-                            // Standardize URLs for reliable comparison
+                            // 标准化 URL 以便可靠比较
                             let std = url.standardizedFileURL
                             return recommended.contains(std)
                         }
@@ -689,7 +689,7 @@ final class ShelfItemViewModel: ObservableObject {
             panel.accessoryView = column
             panel.isAccessoryViewDisclosed = true
 
-            // Wire up popup to switch filter mode
+            // 连接弹出菜单以切换过滤模式
             class PopupBinder: NSObject {
                 weak var popup: NSPopUpButton?
                 weak var chooserDelegate: AppChooserDelegate?
@@ -743,7 +743,7 @@ final class ShelfItemViewModel: ObservableObject {
                         }
                     }
                 }
-                // Keep binder/delegate alive until panel finishes
+                // 保持 binder/delegate 存活直到面板结束
                 _ = binder
                 _ = chooserDelegate
             }
@@ -755,7 +755,7 @@ final class ShelfItemViewModel: ObservableObject {
             Task {
                 let bookmark = Bookmark(data: bookmarkData)
                 if let fileURL = bookmark.resolveURL() {
-                    // Start security-scoped access and keep it active until rename completes.
+                    // 开启安全作用域访问，并保持激活直到重命名完成。
                     let didStart = fileURL.startAccessingSecurityScopedResource()
 
                     let savePanel = NSSavePanel()
@@ -801,7 +801,7 @@ final class ShelfItemViewModel: ObservableObject {
                     }
                     
                     if let resultURL = resultURL {
-                        // Create bookmark and add to shelf as temporary item
+                        // 创建书签并作为临时项添加到货架
                         if let bookmark = try? Bookmark(url: resultURL) {
                             let newItem = ShelfItem(
                                 kind: .file(bookmark: bookmark.data),
@@ -831,7 +831,7 @@ final class ShelfItemViewModel: ObservableObject {
                     }
                     
                     if let resultURL = resultURL {
-                        // Create bookmark and add to shelf as temporary item
+                        // 创建书签并作为临时项添加到货架
                         if let bookmark = try? Bookmark(url: resultURL) {
                             let newItem = ShelfItem(
                                 kind: .file(bookmark: bookmark.data),
@@ -854,18 +854,18 @@ final class ShelfItemViewModel: ObservableObject {
             
             guard let imageURL = imageURLs.first else { return }
             
-            // Create and show conversion options dialog with better layout
+            // 创建并显示布局更优的转换选项对话框
             let alert = NSAlert()
             alert.messageText = "Convert Image"
             alert.alertStyle = .informational
             alert.addButton(withTitle: "Convert")
             alert.addButton(withTitle: "Cancel")
             
-            // Create accessory view with better spacing and organization
+            // 创建附属视图，具有更好的间距与组织
             let accessoryView = NSView(frame: NSRect(x: 0, y: 0, width: 380, height: 180))
             accessoryView.wantsLayer = true
             
-            // MARK: Format Row
+            // MARK: 格式行
             let formatLabel = NSTextField(labelWithString: "Format:")
             formatLabel.frame = NSRect(x: 0, y: 145, width: 100, height: 20)
             formatLabel.font = .systemFont(ofSize: 12, weight: .medium)
@@ -877,7 +877,7 @@ final class ShelfItemViewModel: ObservableObject {
             formatPopup.font = .systemFont(ofSize: 12)
             accessoryView.addSubview(formatPopup)
             
-            // MARK: Image Size Row
+            // MARK: 图片尺寸行
             let imageSizeLabel = NSTextField(labelWithString: "Image Size:")
             imageSizeLabel.frame = NSRect(x: 0, y: 105, width: 100, height: 20)
             imageSizeLabel.font = .systemFont(ofSize: 12, weight: .medium)
@@ -889,27 +889,27 @@ final class ShelfItemViewModel: ObservableObject {
             imageSizePopup.font = .systemFont(ofSize: 12)
             accessoryView.addSubview(imageSizePopup)
             
-            // Custom size field (initially hidden)
+            // 自定义尺寸输入框（初始隐藏）
             let customSizeField = NSTextField(frame: NSRect(x: 285, y: 103, width: 85, height: 22))
             customSizeField.placeholderString = "e.g., 1920"
             customSizeField.font = .systemFont(ofSize: 12)
             customSizeField.isHidden = true
             accessoryView.addSubview(customSizeField)
             
-            // MARK: Preserve Metadata Checkbox
+            // MARK: 保留元数据复选框
             let metadataCheckbox = NSButton(checkboxWithTitle: "Preserve Metadata", target: nil, action: nil)
             metadataCheckbox.frame = NSRect(x: 120, y: 65, width: 200, height: 20)
             metadataCheckbox.font = .systemFont(ofSize: 12)
             metadataCheckbox.state = .on
             accessoryView.addSubview(metadataCheckbox)
             
-            // MARK: Separator line
+            // MARK: 分隔线
             let separatorLine = NSView(frame: NSRect(x: 0, y: 50, width: 380, height: 1))
             separatorLine.wantsLayer = true
             separatorLine.layer?.backgroundColor = NSColor.separatorColor.cgColor
             accessoryView.addSubview(separatorLine)
             
-            // MARK: Format-specific options (shown/hidden based on format selection)
+            // MARK: 格式相关选项（根据所选格式显示/隐藏）
             let qualityRow = NSView(frame: NSRect(x: 0, y: 15, width: 380, height: 30))
             qualityRow.wantsLayer = true
             
@@ -930,7 +930,7 @@ final class ShelfItemViewModel: ObservableObject {
             qualityValueLabel.alignment = .left
             accessoryView.addSubview(qualityValueLabel)
             
-            // Update quality label and hide/show compression row based on format
+            // 根据格式更新质量标签并显示/隐藏压缩行
             let updateQualityLabel = {
                 let value = Int(qualitySlider.doubleValue * 100)
                 qualityValueLabel.stringValue = "\(value)%"
@@ -938,7 +938,7 @@ final class ShelfItemViewModel: ObservableObject {
             
             let updateCompressionVisibility = {
                 let formatIndex = formatPopup.indexOfSelectedItem
-                let showCompression = formatIndex == 1 || formatIndex == 2 // JPEG or HEIC
+                let showCompression = formatIndex == 1 || formatIndex == 2 // JPEG 或 HEIC
                 qualitySlider.isHidden = !showCompression
                 qualityValueLabel.isHidden = !showCompression
                 qualityLabel.isHidden = !showCompression
@@ -946,10 +946,10 @@ final class ShelfItemViewModel: ObservableObject {
             
             let updateCustomSizeVisibility = {
                 let sizeIndex = imageSizePopup.indexOfSelectedItem
-                customSizeField.isHidden = sizeIndex != 4 // Show only for "Custom..."
+                customSizeField.isHidden = sizeIndex != 4 // 仅在选择「自定义...」时显示
             }
             
-            // Create a target object to handle slider value changes
+            // 创建目标对象以处理滑块值变化
             class SliderHandler: NSObject {
                 let updateLabel: () -> Void
                 let updateVisibility: () -> Void
@@ -985,7 +985,7 @@ final class ShelfItemViewModel: ObservableObject {
             updateQualityLabel()
             updateCustomSizeVisibility()
             
-            // Keep the handler alive using the `AssociatedObject` helper instead of a magic string key
+            // 使用 `AssociatedObject` 辅助对象保持 handler 存活，而非魔法字符串键
             MenuActionTarget.sliderHandlerAssoc[accessoryView] = handler
             
             alert.accessoryView = accessoryView
@@ -993,7 +993,7 @@ final class ShelfItemViewModel: ObservableObject {
             let response = alert.runModal()
             
             if response == .alertFirstButtonReturn {
-                // Get selected options
+                // 获取所选选项
                 let formatIndex = formatPopup.indexOfSelectedItem
                 let format: ImageConversionOptions.ImageFormat
                 switch formatIndex {
@@ -1007,15 +1007,15 @@ final class ShelfItemViewModel: ObservableObject {
                 
                 let quality = qualitySlider.doubleValue
                 
-                // Get max dimension based on image size selection
+                // 根据图片尺寸选择获取最大尺寸
                 let maxDimension: CGFloat? = {
                     let sizeIndex = imageSizePopup.indexOfSelectedItem
                     switch sizeIndex {
-                    case 0: return nil // Actual Size
-                    case 1: return 1280 // Large 
-                    case 2: return 640  // Medium 
-                    case 3: return 320  // Small 
-                    case 4: // Custom (user-specified)
+                    case 0: return nil // 实际尺寸
+                    case 1: return 1280 // 大
+                    case 2: return 640  // 中
+                    case 3: return 320  // 小
+                    case 4: // 自定义（用户指定）
                         let text = customSizeField.stringValue.trimmingCharacters(in: .whitespaces)
                         guard !text.isEmpty, let value = Double(text), value > 0 else { return nil }
                         return CGFloat(value)
@@ -1023,7 +1023,7 @@ final class ShelfItemViewModel: ObservableObject {
                     }
                 }()
                 
-                let removeMetadata = metadataCheckbox.state == .off // Note: we invert this
+                let removeMetadata = metadataCheckbox.state == .off // 注意：这里做了取反
                 
                 let options = ImageConversionOptions(
                     format: format,
@@ -1039,7 +1039,7 @@ final class ShelfItemViewModel: ObservableObject {
                         }
                         
                         if let resultURL = resultURL {
-                            // Create bookmark and add to shelf as temporary item
+                            // 创建书签并作为临时项添加到货架
                             if let bookmark = try? Bookmark(url: resultURL) {
                                 let newItem = ShelfItem(
                                     kind: .file(bookmark: bookmark.data),
@@ -1067,7 +1067,7 @@ final class ShelfItemViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Private helpers
+    // MARK: - 私有辅助方法
     private func appDisplayName(for appURL: URL) -> String {
         (try? appURL.resourceValues(forKeys: [.localizedNameKey]).localizedName) ?? appURL.lastPathComponent
     }

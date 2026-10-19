@@ -34,7 +34,7 @@ final class MediaChecker: Sendable {
                 throw MediaCheckerError.processExecutionFailed
             }
 
-            // Timeout after 10 seconds
+            // 10 秒后超时
             let didExit: Bool = try await withThrowingTaskGroup(of: Bool.self) { group in
                 group.addTask {
                     process.waitUntilExit()
@@ -45,7 +45,7 @@ final class MediaChecker: Sendable {
                     if process.isRunning {
                         process.terminate()
                     }
-                    return false // Timed out
+                    return false // 已超时
                 }
                 for try await exited in group {
                     if exited {

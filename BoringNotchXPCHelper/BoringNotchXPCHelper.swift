@@ -99,7 +99,7 @@ class BoringNotchXPCHelper: NSObject, BoringNotchXPCHelperProtocol {
     @objc func setKeyboardBrightness(_ value: Float, with reply: @escaping (Bool) -> Void) {
         reply(Self.keyboardClient.setBrightness(value))
     }
-    // MARK: - Screen Brightness (moved from client app into helper)
+    // MARK: - 屏幕亮度（已从客户端应用移入辅助进程）
 
     @objc func isScreenBrightnessAvailable(with reply: @escaping (Bool) -> Void) {
         var b: Float = 0
@@ -139,7 +139,7 @@ class BoringNotchXPCHelper: NSObject, BoringNotchXPCHelperProtocol {
         reply(false)
     }
 
-    // MARK: - Private helpers for DisplayServices / IOKit access
+    // MARK: - DisplayServices / IOKit 访问的私有辅助
     private func displayServicesGetBrightness(displayID: CGDirectDisplayID, out: inout Float) -> Bool {
         guard let sym = dlsym(DisplayServicesHandle.handle, "DisplayServicesGetBrightness") else { return false }
         typealias Fn = @convention(c) (CGDirectDisplayID, UnsafeMutablePointer<Float>) -> Int32
@@ -175,7 +175,7 @@ class BoringNotchXPCHelper: NSObject, BoringNotchXPCHelperProtocol {
         return nil
     }
 
-    // MARK: - Helper handle for private framework
+    // MARK: - 私有框架的辅助句柄
     private enum DisplayServicesHandle {
         static let handle: UnsafeMutableRawPointer? = {
             let paths = [

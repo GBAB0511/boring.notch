@@ -65,7 +65,7 @@ struct ShelfItemView: View {
         }
         .onChange(of: viewModel.isDropTargeted) { _, targeted in
             vm.dragDetectorTargeting = targeted
-            // Debounce drop target state changes
+            // 对拖放目标状态变化做防抖处理
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(50))
                 debouncedDropTarget = targeted
@@ -74,7 +74,7 @@ struct ShelfItemView: View {
         .onAppear {
             Task { 
                 await viewModel.loadThumbnail()
-                // Pre-render drag preview once on appear
+                // 在出现时预渲染一次拖拽预览
                 if cachedPreviewImage == nil {
                     cachedPreviewImage = await renderDragPreview()
                 }
@@ -84,7 +84,7 @@ struct ShelfItemView: View {
             }
         }
         .onChange(of: viewModel.thumbnail) { _, _ in
-            // Invalidate cached preview when thumbnail changes
+            // 缩略图变化时使缓存的预览失效
             Task {
                 cachedPreviewImage = await renderDragPreview()
             }
@@ -92,7 +92,7 @@ struct ShelfItemView: View {
         .quickLookPresenter(using: quickLookService)
     }
 
-    // MARK: - View Components
+    // MARK: - 视图组件
 
     private var iconView: some View {
         Image(nsImage: viewModel.thumbnail ?? item.icon)
@@ -155,7 +155,7 @@ struct ShelfItemView: View {
         }
     }
     
-    // MARK: - Drag Preview Rendering
+    // MARK: - 拖拽预览渲染
     
     @MainActor
     private func renderDragPreview() async -> NSImage {
@@ -168,7 +168,7 @@ struct ShelfItemView: View {
     
 }
 
-// MARK: - Draggable Click Handler with NSDraggingSource
+// MARK: - 带 NSDraggingSource 的可拖拽点击处理器
 private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
     let item: ShelfItem
     let viewModel: ShelfItemViewModel
@@ -190,7 +190,7 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
     func updateNSView(_ nsView: DraggableClickView, context: Context) {
         nsView.item = item
         nsView.viewModel = viewModel
-        // Only update preview if cached version is available
+        // 仅当缓存版本可用时才更新预览
         if let cached = cachedPreviewImage {
             nsView.dragPreviewImage = cached
         }
@@ -207,7 +207,7 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
             return nsImage
         }
         
-        // Fallback to icon if rendering fails
+        // 渲染失败时回退到图标
         return viewModel.thumbnail ?? item.icon
     }
     
@@ -252,7 +252,7 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         }
         
         private func startDragSession(with event: NSEvent) {
-            // Prepare dragging items
+            // 准备拖拽项
             let selectedItems = ShelfSelectionModel.shared.selectedItems(in: ShelfStateViewModel.shared.items)
             let itemsToDrag: [ShelfItem]
 
@@ -262,17 +262,17 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
                 itemsToDrag = [item]
             }
 
-            // Store items being dragged for auto-remove feature
+            // 保存正在拖拽的项，用于自动移除功能
             draggedItems = itemsToDrag
 
-            // Create dragging items for AppKit
+            // 为 AppKit 创建拖拽项
             var draggingItems: [NSDraggingItem] = []
 
             for dragItem in itemsToDrag {
                 if let pasteboardItem = createPasteboardItem(for: dragItem) {
                     let draggingItem = NSDraggingItem(pasteboardWriter: pasteboardItem)
 
-                    // Use the drag preview image
+                    // 使用拖拽预览图片
                     let image = dragPreviewImage ?? dragItem.icon
                     let imageFrame = NSRect(
                         x: 0,
@@ -301,7 +301,7 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
                     return pasteboardItem
                 }
                 
-                // Start accessing security-scoped resource and keep it active during drag
+                // 开启安全作用域资源访问，并在拖拽期间保持激活
                 if url.startAccessingSecurityScopedResource() {
                     draggedURLs.append(url)
                     NSLog("🔐 Started security-scoped access for drag: \(url.path)")
@@ -325,7 +325,7 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         // MARK: - NSDraggingSource
         
         func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
-            // When copyOnDrag is enabled, only allow copy operations
+            // 当启用 copyOnDrag 时，仅允许复制操作
             if Defaults[.copyOnDrag] {
                 return [.copy]
             }
@@ -348,14 +348,14 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
             ShelfSelectionModel.shared.endDrag()
 
-            // Stop accessing security-scoped resources after drag completes
+            // 拖拽完成后停止访问安全作用域资源
             for url in draggedURLs {
                 url.stopAccessingSecurityScopedResource()
                 NSLog("🔐 Stopped security-scoped access after drag: \(url.path)")
             }
             draggedURLs.removeAll()
 
-            // Auto-remove items from shelf if enabled and drag succeeded
+            // 若启用了自动移除且拖拽成功，则从货架移除这些项
             if Defaults[.autoRemoveShelfItems] && !operation.isEmpty {
                 for item in draggedItems {
                     ShelfStateViewModel.shared.remove(item)

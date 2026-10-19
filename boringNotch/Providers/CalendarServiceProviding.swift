@@ -64,7 +64,7 @@ class CalendarService: CalendarServiceProviding {
         
         var events: [EventModel] = []
         
-        // Fetch regular events
+        // 获取常规事件
         if hasAccess(to: .event) {
             let eventCalendars = ekCalendars.filter { store.calendars(for: .event).contains($0) }
             let predicate = store.predicateForEvents(withStart: start, end: end, calendars: eventCalendars)
@@ -72,7 +72,7 @@ class CalendarService: CalendarServiceProviding {
             events.append(contentsOf: ekEvents.compactMap { EventModel(from: $0) })
         }
         
-        // Fetch reminders
+        // 获取提醒事项
         if hasAccess(to: .reminder) {
             let reminderCalendars = ekCalendars.filter { store.calendars(for: .reminder).contains($0) }
             events.append(contentsOf: await fetchReminders(from: start, to: end, calendars: reminderCalendars))
@@ -83,13 +83,13 @@ class CalendarService: CalendarServiceProviding {
     
     private func fetchReminders(from start: Date, to end: Date, calendars: [EKCalendar]) async -> [EventModel] {
         return await withCheckedContinuation { continuation in
-            // Create predicate for reminders with due dates in the specified range
+            // 为指定范围内的提醒事项（含截止日期）创建谓词
             let predicate = store.predicateForReminders(in: calendars)
             
             store.fetchReminders(matching: predicate) { reminders in
                 
                 let filteredReminders = (reminders ?? []).filter { reminder in
-                    // Check if reminder has a due date within our range
+                    // 检查提醒事项的截止日期是否在目标范围内
                     guard let dueDate = reminder.dueDateComponents?.date else {
                         return false
                     }
@@ -97,7 +97,7 @@ class CalendarService: CalendarServiceProviding {
                     return dueDate >= start && dueDate <= end
                 }
                 
-                // Convert to EventModel
+                // 转换为 EventModel
                 let eventModels = filteredReminders.compactMap { reminder in
                     EventModel(from: reminder)
                 }
@@ -118,7 +118,7 @@ class CalendarService: CalendarServiceProviding {
     }
 }
 
-// MARK: - Model Extensions
+// MARK: - 模型扩展
 
 extension CalendarModel {
     init(from calendar: EKCalendar) {
@@ -241,7 +241,7 @@ extension Priority {
     }
 }
 
-// MARK: - Helper Extensions
+// MARK: - 辅助扩展
 
 private extension EKCalendar {
     var accountTitle: String {

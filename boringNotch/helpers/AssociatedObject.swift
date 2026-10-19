@@ -9,7 +9,7 @@ import Foundation
 import ObjectiveC
 
 
-/// Lightweight helper for Objective-C associated objects.
+/// Objective-C 关联对象的轻量辅助工具
 public struct AssociatedObject<Value: AnyObject> {
     private let key: UnsafeRawPointer
     private let policy: objc_AssociationPolicy

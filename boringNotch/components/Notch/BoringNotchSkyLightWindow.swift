@@ -22,7 +22,7 @@ extension SkyLightOperator {
             return
         }
         
-        // Remove the window from the SkyLight space
+        // 将窗口从 SkyLight 空间移除
         _ = SLSRemoveWindowsFromSpaces(
             connection,
             [window.windowNumber] as CFArray,
@@ -62,7 +62,7 @@ class BoringNotchSkyLightWindow: NSPanel {
         hasShadow = false
         isReleasedWhenClosed = false
         
-        // Force dark appearance regardless of system setting
+        // 无论系统设置如何，强制深色外观
         appearance = NSAppearance(named: .darkAqua)
         
         collectionBehavior = [
@@ -72,12 +72,12 @@ class BoringNotchSkyLightWindow: NSPanel {
             .ignoresCycle,
         ]
         
-        // Apply initial sharing type setting
+        // 应用初始的共享类型设置
         updateSharingType()
     }
     
     private func setupObservers() {
-        // Listen for changes to the hideFromScreenRecording setting
+        // 监听「录屏时隐藏」设置的变化
         Defaults.publisher(.hideFromScreenRecording)
             .sink { [weak self] _ in
                 self?.updateSharingType()

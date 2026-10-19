@@ -10,7 +10,7 @@ import Combine
 import Defaults
 import SwiftUI
 
-// MARK: - Music Player Components
+// MARK: - 音乐播放器组件
 
 struct MusicPlayerView: View {
     @EnvironmentObject var vm: BoringViewModel
@@ -228,7 +228,7 @@ struct MusicControlsView: View {
         )
         let padded = slotConfig.padded(to: sanitizedLimit, filler: .none)
         let result = Array(padded.prefix(sanitizedLimit))
-        // If calendar and camera are both visible alongside music, hide the edge slots
+        // 若日历和摄像头与音乐同时可见，则隐藏边缘槽位
         let shouldHideEdges = Defaults[.showCalendar] && Defaults[.showMirror] && webcamManager.cameraAvailable && vm.isCameraExpanded
         if shouldHideEdges && result.count >= 5 {
             return Array(result.dropFirst().dropLast())
@@ -325,7 +325,7 @@ private extension Array where Element == MusicControlButton {
     }
 }
 
-// MARK: - Volume Control View
+// MARK: - 音量控制视图
 
 struct VolumeControlView: View {
     @ObservedObject var musicManager = MusicManager.shared
@@ -389,7 +389,7 @@ struct VolumeControlView: View {
         }
         .onChange(of: showVolumeSlider) { _, isShowing in
             if isShowing {
-                // Sync volume from app when slider appears
+                // 滑块出现时从应用同步音量
                 Task {
                     await MusicManager.shared.syncVolumeFromActiveApp()
                 }
@@ -416,7 +416,7 @@ struct VolumeControlView: View {
     }
 }
 
-// MARK: - Main View
+// MARK: - 主视图
 
 struct NotchHomeView: View {
     @EnvironmentObject var vm: BoringViewModel

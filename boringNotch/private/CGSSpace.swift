@@ -11,7 +11,7 @@
 
 import AppKit
 
-/// Small Spaces API wrapper.
+/// 轻量 Spaces API 封装
 public final class CGSSpace {
     private let identifier: CGSSpaceID
 
@@ -29,9 +29,9 @@ public final class CGSSpace {
         }
     }
 
-    /// Initialized `CGSSpace`s *MUST* be de-initialized upon app exit!
+    /// 初始化的 CGSSpace 必须在应用退出时销毁！
     public init(level: Int = 0) {
-        let flag = 0x1 // this value MUST be 1, otherwise, Finder decides to draw desktop icons
+        let flag = 0x1 // 此值必须为 1，否则 Finder 会绘制桌面图标
         self.identifier = CGSSpaceCreate(_CGSDefaultConnection(), flag, nil)
         CGSSpaceSetAbsoluteLevel(_CGSDefaultConnection(), self.identifier, level)
         CGSShowSpaces(_CGSDefaultConnection(), [self.identifier])
@@ -43,7 +43,7 @@ public final class CGSSpace {
     }
 }
 
-// CGSSpace stuff:
+// CGSSpace 相关（私有 API 声明）：
 fileprivate typealias CGSConnectionID = UInt
 fileprivate typealias CGSSpaceID = UInt64
 @_silgen_name("_CGSDefaultConnection")

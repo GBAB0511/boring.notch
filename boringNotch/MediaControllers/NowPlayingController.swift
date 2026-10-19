@@ -14,7 +14,7 @@ final class NowPlayingController: ObservableObject, MediaControllerProtocol {
         await fetchFavoriteStateIfSupported()
     }
 
-    // MARK: - Properties
+    // MARK: - 属性
     @Published private(set) var playbackState: PlaybackState = .init(
         bundleIdentifier: "com.apple.Music"
     )
@@ -50,7 +50,7 @@ final class NowPlayingController: ObservableObject, MediaControllerProtocol {
             }
         }
         
-        // Update the favorite state locally and fetch updated info
+        // 本地更新收藏状态，并重新获取最新信息
         try? await Task.sleep(for: .milliseconds(150))
         await updatePlaybackInfo()
     }
@@ -58,7 +58,7 @@ final class NowPlayingController: ObservableObject, MediaControllerProtocol {
     private var lastMusicItem:
         (title: String, artist: String, album: String, duration: TimeInterval, artworkData: Data?)?
 
-    // MARK: - Media Remote Functions
+    // MARK: - Media Remote 函数
     private let mediaRemoteBundle: CFBundle
     private let MRMediaRemoteSendCommandFunction: @convention(c) (Int, AnyObject?) -> Void
     private let MRMediaRemoteSetElapsedTimeFunction: @convention(c) (Double) -> Void
@@ -69,7 +69,7 @@ final class NowPlayingController: ObservableObject, MediaControllerProtocol {
     private var pipeHandler: JSONLinesPipeHandler?
     private var streamTask: Task<Void, Never>?
 
-    // MARK: - Initialization
+    // MARK: - 初始化
     init?() {
         guard
             let bundle = CFBundleCreate(
@@ -118,7 +118,7 @@ final class NowPlayingController: ObservableObject, MediaControllerProtocol {
         self.pipeHandler = nil
     }
 
-    // MARK: - Protocol Implementation
+    // MARK: - 协议实现
     func play() async {
         MRMediaRemoteSendCommandFunction(0, nil)
     }
@@ -161,8 +161,8 @@ final class NowPlayingController: ObservableObject, MediaControllerProtocol {
     }
     
     func setVolume(_ level: Double) async {
-        // MediaRemote framework doesn't provide direct volume control for the active audio session
-        // As a workaround, try to control the currently active music app directly
+        // MediaRemote 框架不提供对当前音频会话的直接音量控制
+        // 作为变通方案，尝试直接控制当前活跃的音乐应用
         let clampedLevel = max(0.0, min(1.0, level))
         let volumePercentage = Int(clampedLevel * 100)
         
@@ -186,7 +186,7 @@ final class NowPlayingController: ObservableObject, MediaControllerProtocol {
         playbackState.volume = clampedLevel
     }
     
-    // MARK: - Setup Methods
+    // MARK: - 设置方法
     private func setupNowPlayingObserver() async {
         let process = Process()
         guard
@@ -216,7 +216,7 @@ final class NowPlayingController: ObservableObject, MediaControllerProtocol {
         }
     }
 
-    // MARK: - Async Stream Processing
+    // MARK: - 异步流处理
     private func processJSONStream() async {
         guard let pipeHandler = self.pipeHandler else { return }
         
@@ -225,7 +225,7 @@ final class NowPlayingController: ObservableObject, MediaControllerProtocol {
         }
     }
 
-    // MARK: - Update Methods
+    // MARK: - 更新方法
     private func handleAdapterUpdate(_ update: NowPlayingUpdate) async {
         let payload = update.payload
         let diff = update.diff ?? false
@@ -295,7 +295,7 @@ final class NowPlayingController: ObservableObject, MediaControllerProtocol {
         
         self.playbackState = newPlaybackState
         
-        // Fetch favorite state for supported apps asynchronously
+        // 异步获取受支持应用的收藏状态
         // await fetchFavoriteStateIfSupported()
     }
     
@@ -399,7 +399,7 @@ actor JSONLinesPipeHandler {
             let decodedObject = try JSONDecoder().decode(T.self, from: data)
             await onLine(decodedObject)
         } catch {
-            // Ignore lines that can't be decoded
+            // 忽略无法解码的行
         }
     }
     

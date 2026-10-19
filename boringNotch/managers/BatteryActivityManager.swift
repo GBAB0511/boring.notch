@@ -1,8 +1,8 @@
 import Foundation
 import IOKit.ps
 
-/// Manages and monitors battery status changes on the device
-/// - Note: This class uses the IOKit framework to monitor battery status
+/// 管理并监听设备电池状态变化
+/// - 注意：此类使用 IOKit 框架监听电池状态
 class BatteryActivityManager {
 
     static let shared = BatteryActivityManager()
@@ -50,7 +50,7 @@ class BatteryActivityManager {
         setupLowPowerModeObserver()
     }
     
-    /// Setup observer for low power mode changes
+    /// 设置低电量模式变化的观察者
     private func setupLowPowerModeObserver() {
         NotificationCenter.default.addObserver(
             self,
@@ -60,12 +60,12 @@ class BatteryActivityManager {
         )
     }
 
-    /// Called when low power mode is enabled or disabled
+    /// 当低电量模式启用或停用时调用
     @objc private func lowPowerModeChanged() {
         notifyBatteryChanges()
     }
     
-    /// Starts monitoring battery changes
+    /// 开始监听电池变化
     private func startMonitoring() {
         guard let powerSource = IOPSNotificationCreateRunLoopSource({ context in
             guard let context = context else { return }
@@ -78,7 +78,7 @@ class BatteryActivityManager {
         CFRunLoopAddSource(CFRunLoopGetCurrent(), powerSource, .defaultMode)
     }
 
-    /// Stops monitoring battery changes
+    /// 停止监听电池变化
     private func stopMonitoring() {
         if let powerSource = batterySource {
             CFRunLoopRemoveSource(CFRunLoopGetCurrent(), powerSource, .defaultMode)
@@ -86,7 +86,7 @@ class BatteryActivityManager {
         }
     }
 
-    /// Checks for changes in a property and notifies observers
+    /// 检查某属性变化并通知观察者（变化时才入队通知）
     private func checkAndNotify<T: Equatable>(
         previous: T, 
         current: T, 
@@ -97,14 +97,13 @@ class BatteryActivityManager {
         }
     }
     
-    /// Notifies the observers of battery changes
-    /// Checks for changes in battery status and notifies observers
+    /// 通知观察者电池变化：检查各项电池状态是否变化并通知观察者
     private func notifyBatteryChanges() {
         let batteryInfo = getBatteryInfo()
         
-        // Check for changes
+        // 检查各项变化
         if let previousInfo = previousBatteryInfo {
-            // Usar la función auxiliar para cada propiedad
+            // 对每个属性使用辅助函数进行变化检测
             checkAndNotify(
                 previous: previousInfo.isPluggedIn,
                 current: batteryInfo.isPluggedIn,
@@ -141,7 +140,7 @@ class BatteryActivityManager {
                 eventGenerator: { .maxCapacityChanged(capacity: $0) }
             )
         } else {
-            // First time notification
+            // 首次通知
             enqueueNotification(.powerSourceChanged(isPluggedIn: batteryInfo.isPluggedIn))
             enqueueNotification(.batteryLevelChanged(level: batteryInfo.currentCapacity))
             enqueueNotification(.isChargingChanged(isCharging: batteryInfo.isCharging))
@@ -150,10 +149,10 @@ class BatteryActivityManager {
             enqueueNotification(.maxCapacityChanged(capacity: batteryInfo.maxCapacity))
         }
 
-        // Update previous battery info
+        // 更新上次的电池信息
         previousBatteryInfo = batteryInfo
 
-        // Trigger optional callbacks
+        // 触发可选回调
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             self.onBatteryLevelChange?(batteryInfo.currentCapacity)
@@ -165,16 +164,15 @@ class BatteryActivityManager {
         }
     }
 
-    /// Enqueues a notification to be processed
-    /// - Parameter event: The battery event
+    /// 将通知入队待处理
+    /// - 参数 event：电池事件
     private func enqueueNotification(_ event: BatteryEvent) {
         notificationQueue.append(event)
         processNextNotification()
     }
     
-    /// Processes the next notification in the queue
-    /// If there are no more notifications, the queue is cleared
-    /// and the processing flag is set to false
+    /// 处理队列中的下一条通知（间隔 1 秒，避免通知过于密集）
+    /// 若队列已空，则清空队列并将处理标志设为 false
     private func processNextNotification() {
         guard !isProcessingNotifications, !notificationQueue.isEmpty else { return }
         isProcessingNotifications = true
@@ -185,15 +183,15 @@ class BatteryActivityManager {
             self.notifyObservers(event: event)
             self.isProcessingNotifications = false
             
-            // Check if there are more items in the queue
+            // 检查队列中是否还有更多项
             if !self.notificationQueue.isEmpty {
                 self.processNextNotification()
             }
         }
     }
     
-    /// Initializes the battery information when the manager starts
-    /// - Returns: Current battery information
+    /// 管理器启动时初始化电池信息
+    /// - 返回：当前电池信息
     func initializeBatteryInfo() -> BatteryInfo {
         previousBatteryInfo = getBatteryInfo()
         guard let batteryInfo = previousBatteryInfo else {
@@ -209,11 +207,11 @@ class BatteryActivityManager {
         return batteryInfo
     }
 
-    /// Get the current battery information
-    /// - Returns: The current battery information
+    /// 获取当前电池信息
+    /// - 返回：当前电池信息
     private func getBatteryInfo() -> BatteryInfo {
         do {
-            // Get power source information
+            // 获取电源信息
             guard let snapshot = IOPSCopyPowerSourcesInfo()?.takeRetainedValue() else {
                 throw BatteryError.powerSourceUnavailable
             }
@@ -229,7 +227,7 @@ class BatteryActivityManager {
                 throw BatteryError.batteryInfoUnavailable("Could not get power source description")
             }
             
-            // Extract required battery parameters with error handling
+            // 带错误处理地提取所需电池参数
             guard let currentCapacity = description[kIOPSCurrentCapacityKey] as? Float else {
                 throw BatteryError.batteryParameterMissing("Current capacity")
             }
@@ -246,7 +244,7 @@ class BatteryActivityManager {
                 throw BatteryError.batteryParameterMissing("Power source state")
             }
             
-            // Create battery info with the extracted parameters
+            // 用提取的参数创建电池信息
             var batteryInfo = BatteryInfo(
                 isPluggedIn: powerSource == kIOPSACPowerValue,
                 isCharging: isCharging,
@@ -256,7 +254,7 @@ class BatteryActivityManager {
                 timeToFullCharge: 0
             )
             
-            // Optional parameters
+            // 可选参数
             if let timeToFullCharge = description[kIOPSTimeToFullChargeKey] as? Int {
                 batteryInfo.timeToFullCharge = timeToFullCharge
             }
@@ -278,23 +276,23 @@ class BatteryActivityManager {
         }
     }
     
-    /// Adds an observer to listen to battery changes
-    /// - Parameter observer: The observer closure to be called on battery events
-    /// - Returns: The ID of the observer for later removal
+    /// 添加观察者以监听电池变化
+    /// - 参数 observer：电池事件触发时调用的回调闭包
+    /// - 返回：观察者 ID（供后续移除使用）
     func addObserver(_ observer: @escaping (BatteryEvent) -> Void) -> Int {
         observers.append(observer)
         return observers.count - 1
     }
 
-    /// Removes an observer by its ID
-    /// - Parameter id: The ID of the observer to be removed
+    /// 通过 ID 移除观察者
+    /// - 参数 id：要移除的观察者 ID
     func removeObserver(byId id: Int) {
         guard id >= 0 && id < observers.count else { return }
         observers.remove(at: id)
     }
     
-    /// Notifies all observers of a battery event
-    /// - Parameter event: The battery event to notify
+    /// 将电池事件通知所有观察者
+    /// - 参数 event：要通知的电池事件
     private func notifyObservers(event: BatteryEvent) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -311,7 +309,7 @@ class BatteryActivityManager {
     
 }
 
-/// Struct to hold battery information
+/// 用于承载电池信息的结构体
 struct BatteryInfo {
     var isPluggedIn: Bool
     var isCharging: Bool

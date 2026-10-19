@@ -17,7 +17,7 @@ struct OpenNotchHUD: View {
     
     var body: some View {
         HStack(spacing: 8) {
-            // Icon
+            // 图标
             Group {
                 switch type {
                 case .volume:
@@ -46,12 +46,12 @@ struct OpenNotchHUD: View {
             .foregroundStyle(.white)
             .frame(width: 20, alignment: .center)
             
-            // Slider or Status Text
+            // 滑块或状态文字
             if type != .mic {
                 DraggableProgressBar(value: $value, onChange: { newVal in
                      updateSystemValue(newVal)
                 })
-                .frame(width: showPercentage ? 65 : 108) // Fixed width for consistency
+                .frame(width: showPercentage ? 65 : 108) // 固定宽度以保持一致性
             } else {
                 Text(value > 0 ? "Unmuted" : "Muted")
                     .font(.system(size: 13, weight: .medium))
@@ -59,7 +59,7 @@ struct OpenNotchHUD: View {
                     .fixedSize()
             }
             
-            // Percentage Text
+            // 百分比文字
             if type != .mic && showPercentage {
                 Text("\(Int(value * 100))%")
                     .font(.system(size: 12, weight: .medium))

@@ -12,21 +12,21 @@ struct MinimalFaceFeatures: View {
     @State var width:CGFloat = 30;
     
     var body: some View {
-        VStack(spacing: 4) { // Adjusted spacing to fit within 30x30
-            // Eyes
-            HStack(spacing: 4) { // Adjusted spacing to fit within 30x30
+        VStack(spacing: 4) { // 调整间距以适配 30x30
+            // 眼睛
+            HStack(spacing: 4) { // 调整间距以适配 30x30
                 Eye(isBlinking: $isBlinking)
                 Eye(isBlinking: $isBlinking)
             }
             
-            // Nose and mouth combined
-            VStack(spacing: 2) { // Adjusted spacing to fit within 30x30
-                // Nose
+            // 鼻子和嘴巴（合并）
+            VStack(spacing: 2) { // 调整间距以适配 30x30
+                // 鼻子
                 RoundedRectangle(cornerRadius: 2)
                     .fill(Color.white)
                     .frame(width: 3, height: 4)
                 
-                // Mouth (happy)
+                // 嘴巴（微笑）
                 GeometryReader { geometry in
                     Path { path in
                         let width = geometry.size.width
@@ -39,7 +39,7 @@ struct MinimalFaceFeatures: View {
                 .frame(width: 14, height: 10)
             }
         }
-        .frame(width: self.width, height: self.height) // Maximum size of face
+        .frame(width: self.width, height: self.height) // 脸部的最大尺寸
         .onAppear {
             startBlinking()
         }
@@ -66,7 +66,7 @@ struct Eye: View {
         RoundedRectangle(cornerRadius: 10)
             .fill(Color.white)
             .frame(width: 4, height: isBlinking ? 1 : 4)
-            .frame(maxWidth: 15, maxHeight: 15) // Adjusted max size
+            .frame(maxWidth: 15, maxHeight: 15) // 调整后的最大尺寸
             .animation(.easeInOut(duration: 0.1), value: isBlinking)
     }
 }
@@ -77,6 +77,6 @@ struct MinimalFaceFeatures_Previews: PreviewProvider {
             Color.black
             MinimalFaceFeatures()
         }
-        .previewLayout(.fixed(width: 60, height: 60)) // Adjusted preview size for better visibility
+        .previewLayout(.fixed(width: 60, height: 60)) // 调整预览尺寸以获得更好的可见性
     }
 }

@@ -18,9 +18,9 @@ enum TempFileType {
 class TemporaryFileStorageService {
     static let shared = TemporaryFileStorageService()
     
-    // MARK: - Public Interface
+    // MARK: - 公共接口
     
-    /// Creates a temporary file and tracks it for manual cleanup
+    /// 创建一个临时文件并追踪它，以便后续手动清理
     func createTempFile(for type: TempFileType) async -> URL? {
         return await withCheckedContinuation { continuation in
             let result = createTempFile(for: type)
@@ -55,7 +55,7 @@ class TemporaryFileStorageService {
         }
     }
     
-    // MARK: - Private Implementation
+    // MARK: - 私有实现
     
     private func createTempFile(for type: TempFileType) -> URL? {
         let tempDir = URL(fileURLWithPath: NSTemporaryDirectory())
@@ -138,7 +138,7 @@ class TemporaryFileStorageService {
             return nil
         }
 
-        // Helper to run zip process
+        // 辅助函数：运行 /usr/bin/zip 命令行进程，返回是否成功
         func runZip(arguments: [String], currentDirectory: URL) -> Bool {
             let proc = Process()
             proc.executableURL = URL(fileURLWithPath: "/usr/bin/zip")
@@ -154,16 +154,16 @@ class TemporaryFileStorageService {
             }
         }
 
-        // Single-item optimization: do not copy contents into the working dir.
+        // 单项优化：不把内容复制进工作目录，直接对源文件打包
         if urls.count == 1, let src = urls.first {
             let isDir = (try? src.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
             let baseName = src.lastPathComponent
             let archiveName: String
             if isDir {
-                // Folder: name as FolderName.zip and include the folder itself in the archive
+                // 文件夹：命名为「文件夹名.zip」，并把文件夹本身作为顶层条目纳入压缩包
                 archiveName = "\(baseName).zip"
                 let archiveURL = workingDir.appendingPathComponent(archiveName)
-                // Run zip from the parent directory so the folder is stored as top-level entry
+                // 从父目录运行 zip，使文件夹以顶层条目形式存储
                 let parent = src.deletingLastPathComponent()
                 let args = ["-r", "-q", archiveURL.path, baseName]
                 let ok = runZip(arguments: args, currentDirectory: parent)
@@ -173,11 +173,11 @@ class TemporaryFileStorageService {
                     return nil
                 }
             } else {
-                // File: include the file only (no parent folders). Name should include original extension.
+                // 文件：仅包含该文件本身（不含父级目录）。压缩包名需保留原始扩展名。
                 archiveName = "\(baseName).zip"
                 let archiveURL = workingDir.appendingPathComponent(archiveName)
                 let parent = src.deletingLastPathComponent()
-                // -j to junk paths and store only the file
+                // 使用 -j 丢弃路径，只存储文件本身
                 let args = ["-j", "-q", archiveURL.path, baseName]
                 let ok = runZip(arguments: args, currentDirectory: parent)
                 if ok {
@@ -188,12 +188,12 @@ class TemporaryFileStorageService {
             }
         }
 
-        // Multi-item: copy items into working dir (so their relative structure is preserved), zip, then remove copies.
+        // 多项打包：把各项复制进工作目录（以保留相对目录结构），压缩后再删除副本
         for src in urls {
             let dest = workingDir.appendingPathComponent(src.lastPathComponent)
             do {
                 if FileManager.default.fileExists(atPath: dest.path) {
-                    // Avoid collision by appending a suffix
+                    // 名称冲突时追加 UUID 后缀以避免覆盖
                     let unique = "\(UUID().uuidString)_\(src.lastPathComponent)"
                     try FileManager.default.copyItem(at: src, to: workingDir.appendingPathComponent(unique))
                 } else {
@@ -209,7 +209,7 @@ class TemporaryFileStorageService {
         let args = ["-r", "-q", archiveURL.path, "."]
         let ok = runZip(arguments: args, currentDirectory: workingDir)
         if ok {
-            // Remove the copied (uncompressed) items so the temp folder contains only the archive
+            // 删除已复制（未压缩）的原始项，使临时文件夹中只保留压缩包
             do {
                 let contents = try FileManager.default.contentsOfDirectory(at: workingDir, includingPropertiesForKeys: nil)
                 for file in contents {
@@ -226,7 +226,7 @@ class TemporaryFileStorageService {
         }
     }
     
-    // MARK: - Content Creation Helpers
+    // MARK: - 内容创建辅助方法
     
     
     private func createWeblocContent(for url: URL) -> String {

@@ -21,7 +21,7 @@ final class VolumeManager: NSObject, ObservableObject {
 
     private var didInitialFetch = false
     private let step: Float32 = 1.0 / 16.0
-    // Fallback software if hardware mute is not supported
+    // 若硬件不支持静音，则使用软件静音回退（记录静音前音量用于恢复）
     private var previousVolumeBeforeMute: Float32 = 0.2
     private var softwareMuted: Bool = false
 
@@ -33,7 +33,7 @@ final class VolumeManager: NSObject, ObservableObject {
 
     var shouldShowOverlay: Bool { Date().timeIntervalSince(lastChangeAt) < visibleDuration }
 
-    // MARK: - Public Control API
+    // MARK: - 公开控制 API
     @MainActor func increase(stepDivisor: Float = 1.0) {
         let divisor = max(stepDivisor, 0.25)
         let delta = step / Float32(divisor)
@@ -53,7 +53,7 @@ final class VolumeManager: NSObject, ObservableObject {
     }
 
     @MainActor func toggleMuteAction() {
-        // Determine expected resulting state immediately and show HUD with that value
+        // 立即确定预期结果状态，并用该值显示 HUD
         let deviceID = systemOutputDeviceID()
         var willBeMuted = false
         var resultingVolume: Float32 = rawVolume
@@ -100,7 +100,7 @@ final class VolumeManager: NSObject, ObservableObject {
         publish(volume: clamped, muted: isMutedInternal(), touchDate: true)
     }
 
-    // MARK: - CoreAudio Helpers
+    // MARK: - CoreAudio 辅助方法
     private func systemOutputDeviceID() -> AudioObjectID {
         var defaultDeviceID = kAudioObjectUnknown
         var propertyAddress = AudioObjectPropertyAddress(
@@ -208,7 +208,7 @@ final class VolumeManager: NSObject, ObservableObject {
             }
         }
 
-        // Mute
+        // 静音（监听输出设备的静音属性变化）
         var muteAddr = AudioObjectPropertyAddress(
             mSelector: kAudioDevicePropertyMute,
             mScope: kAudioDevicePropertyScopeOutput,
@@ -252,7 +252,7 @@ final class VolumeManager: NSObject, ObservableObject {
             written = any
         }
         if !written {
-            // silent fail
+            // 静默失败（无可用写入通道）
         }
     }
 

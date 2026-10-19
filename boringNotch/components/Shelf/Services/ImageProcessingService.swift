@@ -14,7 +14,7 @@ import PDFKit
 import UniformTypeIdentifiers
 import ImageIO
 
-/// Options for image conversion
+/// 图片转换选项
 struct ImageConversionOptions {
     enum ImageFormat {
         case png, jpeg, heic, tiff, bmp
@@ -41,12 +41,12 @@ struct ImageConversionOptions {
     }
     
     let format: ImageFormat
-    let compressionQuality: Double // 0.0 to 1.0, only applies to JPEG/HEIC
-    let maxDimension: CGFloat? // Max width or height, nil for no scaling
+    let compressionQuality: Double // 0.0 到 1.0，仅对 JPEG/HEIC 生效
+    let maxDimension: CGFloat? // 最大宽度或高度，nil 表示不缩放
     let removeMetadata: Bool
 }
 
-/// Service for processing images (background removal, conversion, PDF creation)
+/// 图片处理服务（背景移除、格式转换、PDF 生成）
 @MainActor
 final class ImageProcessingService {
     static let shared = ImageProcessingService()
@@ -54,9 +54,9 @@ final class ImageProcessingService {
     private init() {}
     private let ciContext = CIContext(options: nil)
     
-    // MARK: - Remove Background
+    // MARK: - 移除背景
     
-    /// Removes the background from an image using Vision framework
+    /// 使用 Vision 框架移除图片背景
     func removeBackground(from url: URL) async throws -> URL? {
         guard let inputImage = NSImage(contentsOf: url) else {
             throw ImageProcessingError.invalidImage
@@ -81,7 +81,7 @@ final class ImageProcessingService {
         
         let processedImage = NSImage(cgImage: output, size: inputImage.size)
         
-        // Create temporary file
+        // 创建临时文件
         let originalName = url.deletingPathExtension().lastPathComponent
         let newName = "\(originalName)_no_bg.png"
         
@@ -121,24 +121,24 @@ final class ImageProcessingService {
         return result
     }
     
-    // MARK: - Convert Image
+    // MARK: - 转换图片
     
-    /// Converts an image with specified options
+    /// 按指定选项转换图片格式
     func convertImage(from url: URL, options: ImageConversionOptions) async throws -> URL? {
         guard var inputImage = NSImage(contentsOf: url) else {
             throw ImageProcessingError.invalidImage
         }
         
-        // Scale image if needed
+        // 如需缩放，先按最大尺寸缩放
         if let maxDim = options.maxDimension {
             inputImage = scaleImage(inputImage, maxDimension: maxDim)
         }
         
-        // Get image data based on format
+        // 根据目标格式获取图片数据
         let imageData: Data?
         
         if options.removeMetadata {
-            // Create new image without metadata
+            // 创建不含元数据的新图片
             guard let cgImage = inputImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
                 throw ImageProcessingError.invalidImage
             }
@@ -153,7 +153,7 @@ final class ImageProcessingService {
             throw ImageProcessingError.conversionFailed
         }
         
-        // Create temporary file
+        // 创建临时文件
         let originalName = url.deletingPathExtension().lastPathComponent
         let newName = "\(originalName)_converted.\(options.format.fileExtension)"
         
@@ -188,7 +188,7 @@ final class ImageProcessingService {
         case .bmp:
             return bitmap.representation(using: .bmp, properties: [:])
         case .heic:
-            // HEIC requires using CIContext
+            // HEIC 格式需借助 CIContext 编码
             guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
                 return nil
             }
@@ -211,7 +211,7 @@ final class ImageProcessingService {
 
         let srcMax = max(srcCG.width, srcCG.height)
         if CGFloat(srcMax) <= maxDimension {
-            return image // no downscaling needed
+            return image // 无需缩小
         }
 
         let scale = maxDimension / CGFloat(srcMax)
@@ -226,11 +226,11 @@ final class ImageProcessingService {
             return image
         }
 
-        // Preserve the source color space for exact color matching
+        // 保留源色彩空间以保证颜色精确匹配
         let colorSpace = srcCG.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)!
         let ciContext = CIContext(options: [.workingColorSpace: colorSpace])
 
-        // Render using the CIContext with matching color space
+        // 使用匹配的色彩空间通过 CIContext 渲染
         guard let dstCG = ciContext.createCGImage(output, from: output.extent, format: .RGBA8, colorSpace: colorSpace) else {
             return image
         }
@@ -238,9 +238,9 @@ final class ImageProcessingService {
         return NSImage(cgImage: dstCG, size: NSSize(width: dstCG.width, height: dstCG.height))
     }
     
-    // MARK: - Create PDF
+    // MARK: - 创建 PDF
     
-    /// Creates a PDF from multiple image URLs
+    /// 由多张图片 URL 生成一份 PDF
     func createPDF(from imageURLs: [URL], outputName: String? = nil) async throws -> URL? {
         guard !imageURLs.isEmpty else {
             throw ImageProcessingError.noImagesProvided
@@ -263,7 +263,7 @@ final class ImageProcessingService {
             throw ImageProcessingError.pdfCreationFailed
         }
         
-        // Create temporary file
+        // 创建临时文件
         let name = outputName ?? "images_\(Date().timeIntervalSince1970).pdf"
         let pdfName = name.hasSuffix(".pdf") ? name : "\(name).pdf"
         
@@ -280,9 +280,9 @@ final class ImageProcessingService {
         return tempURL
     }
     
-    // MARK: - Helper Methods
+    // MARK: - 辅助方法
     
-    /// Checks if a URL is an image file
+    /// 检查某个 URL 是否为图片文件
     func isImageFile(_ url: URL) -> Bool {
         guard let contentType = try? url.resourceValues(forKeys: [.contentTypeKey]).contentType else {
             return false
@@ -291,7 +291,7 @@ final class ImageProcessingService {
     }
 }
 
-// MARK: - Errors
+// MARK: - 错误类型
 
 enum ImageProcessingError: LocalizedError {
     case invalidImage

@@ -18,10 +18,10 @@ struct MusicSlotConfigurationView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Slot configuration (fixed 5)
+            // 槽位配置（固定 5 个）
             slotConfigurationSection
 
-            // Reset button
+            // 重置按钮
             HStack {
                 Spacer()
                 Button("Reset to Defaults") {
@@ -47,18 +47,18 @@ struct MusicSlotConfigurationView: View {
                             slotPreview(for: slot)
                                 .frame(maxWidth: 44)
                                 .onDrag {
-                                    // remember what's being dragged for UX
+                                    // 记住正在拖拽的槽位，用于交互反馈
                                     DispatchQueue.main.async { draggedSlot = slot }
                                     return NSItemProvider(object: NSString(string: "slot:\(index)"))
                                 }
                                 .onDrop(of: [UTType.plainText.identifier], isTargeted: nil) { providers in
                                     let handled = handleDrop(providers, toIndex: index)
-                                    // clear drag state
+                                    // 清除拖拽状态
                                     DispatchQueue.main.async { draggedSlot = nil }
                                     return handled
                                 }
                         } else {
-                            // empty slot: allow drops but do not allow dragging
+                            // 空槽位：允许放置，但不允许拖拽
                             slotPreview(for: slot)
                                 .frame(maxWidth: 44)
                                 .onDrop(of: [UTType.plainText.identifier], isTargeted: nil) { providers in
@@ -188,7 +188,7 @@ struct MusicSlotConfigurationView: View {
                             return handled
                         }
                 } else {
-                    // empty slot: allow drops but not dragging
+                    // 空槽位：允许放置，但不允许拖拽
                     slotPreview(for: currentSlot)
                         .frame(height: 32)
                         .onDrop(of: [UTType.plainText.identifier], isTargeted: nil) { providers in
@@ -266,7 +266,7 @@ struct MusicSlotConfigurationView: View {
         for provider in providers {
             if provider.canLoadObject(ofClass: NSString.self) {
                 provider.loadObject(ofClass: NSString.self) { item, error in
-                    // item may be an NSString (which conforms to NSItemProviderReading) or other reading type
+                    // item 可能是 NSString（遵循 NSItemProviderReading），也可能是其他可读类型
                     if let nsstring = item as? NSString {
                         let raw = nsstring as String
                         DispatchQueue.main.async {
@@ -292,7 +292,7 @@ struct MusicSlotConfigurationView: View {
                         let raw = nsstring as String
                         DispatchQueue.main.async {
                             if raw.hasPrefix("slot:") {
-                                // parse source slot index and clear it
+                                // 解析源槽位索引并清空它
                                 let from = Int(raw.replacingOccurrences(of: "slot:", with: "")) ?? -1
                                 guard from >= 0 && from < fixedSlotCount else { return }
                                 var slots = musicControlSlots
@@ -334,7 +334,7 @@ struct MusicSlotConfigurationView: View {
         } else if raw.hasPrefix("control:") {
             let val = raw.replacingOccurrences(of: "control:", with: "")
             if let control = MusicControlButton(rawValue: val) {
-                // If this control already exists in another slot, clear that original slot
+                // 若该控件已存在于其它槽位，则清空那个原始槽位
                 var slots = musicControlSlots
                 if let existing = slots.firstIndex(of: control), existing != toIndex {
                     slots[existing] = .none

@@ -11,10 +11,10 @@ import SwiftUI
 
 class SpotifyController: MediaControllerProtocol {
     func setFavorite(_ favorite: Bool) async {
-        //Placeholder
+        // 占位实现
     }
     
-    // MARK: - Properties
+    // MARK: - 属性
     @Published private var playbackState: PlaybackState = PlaybackState(
         bundleIdentifier: "com.spotify.client"
     )
@@ -31,7 +31,7 @@ class SpotifyController: MediaControllerProtocol {
 
     private var notificationTask: Task<Void, Never>?
     
-    // Constant for time between command and update
+    // 命令与更新之间的间隔时间常量
     private let commandUpdateDelay: Duration = .milliseconds(25)
 
     private var lastArtworkURL: String?
@@ -63,7 +63,7 @@ class SpotifyController: MediaControllerProtocol {
         artworkFetchTask?.cancel()
     }
     
-    // MARK: - Protocol Implementation
+    // MARK: - 协议实现
     func play() async { await executeCommand("play") }
     func pause() async { await executeCommand("pause") }
     func togglePlay() async { await executeCommand("playpause") }
@@ -160,7 +160,7 @@ class SpotifyController: MediaControllerProtocol {
         }
     }
     
-// MARK: - Private Methods
+// MARK: - 私有方法
     
     private func executeCommand(_ command: String) async {
         let script = "tell application \"Spotify\" to \(command)"

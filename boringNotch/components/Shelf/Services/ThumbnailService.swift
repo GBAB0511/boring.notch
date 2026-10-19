@@ -51,7 +51,7 @@ actor ThumbnailService {
         cache = cache.filter { !$0.key.starts(with: url.path) }
     }
     
-    // MARK: - Private Methods
+    // MARK: - 私有方法
     
     private func generateQuickLookThumbnail(for url: URL, size: CGSize) async -> NSImage? {
         let scale = await MainActor.run { NSScreen.main?.backingScaleFactor ?? 2.0 }
@@ -83,7 +83,7 @@ actor ThumbnailService {
     }
 }
 
-// MARK: - Extensions
+// MARK: - 扩展
 
 extension QLThumbnailRepresentation {
     var nsImage: NSImage {

@@ -68,10 +68,10 @@ private struct ScrollMonitor: NSViewRepresentable {
         }
 
         private func scheduleEndTimeout() {
-            // Cancel any existing scheduled end and schedule a new one.
+            // 取消任何已安排的结束任务并安排新任务。
             endTask?.cancel()
             endTask = Task { @MainActor in
-                // If no new scroll event arrives within this window, consider the gesture ended.
+                // 若在此窗口内没有新的滚动事件到达，则认为手势已结束。
                 try? await Task.sleep(for: .milliseconds(300))
                 guard !Task.isCancelled else { return }
                 if active {
@@ -116,10 +116,10 @@ private struct ScrollMonitor: NSViewRepresentable {
                 return
             }
 
-            // Only consider scroll events that are primarily along the configured axis.
+            // 仅考虑主要沿配置轴方向的滚动事件。
             let absDX = abs(event.scrollingDeltaX)
             let absDY = abs(event.scrollingDeltaY)
-            // Require the movement along the gesture axis to be at least 1.5x the orthogonal axis.
+            // 要求手势轴方向上的移动至少是垂直轴方向的 1.5 倍。
             let axisDominanceFactor: CGFloat = 1.5
             let isAxisDominant: Bool = direction.isHorizontal ? (absDX >= axisDominanceFactor * absDY) : (absDY >= axisDominanceFactor * absDX)
             guard isAxisDominant else { return }

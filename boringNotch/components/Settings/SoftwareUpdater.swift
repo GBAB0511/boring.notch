@@ -24,7 +24,7 @@ struct CheckForUpdatesView: View {
     init(updater: SPUUpdater) {
         self.updater = updater
         
-        // Create our view model for our CheckForUpdatesView
+        // 为「检查更新」视图创建视图模型
         self.checkForUpdatesViewModel = CheckForUpdatesViewModel(updater: updater)
     }
     

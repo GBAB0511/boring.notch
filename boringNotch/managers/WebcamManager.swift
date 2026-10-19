@@ -39,7 +39,7 @@ class WebcamManager: NSObject, ObservableObject {
     
     private var isCleaningUp: Bool = false
     
-    // MARK: - Constants
+    // MARK: - 常量
     
     enum WebcamError: Error, LocalizedError {
         case deviceUnavailable
@@ -58,7 +58,7 @@ class WebcamManager: NSObject, ObservableObject {
         }
     }
     
-    // MARK: - Properties
+    // MARK: - 属性
     
     private override init() {
         super.init()
@@ -80,9 +80,9 @@ class WebcamManager: NSObject, ObservableObject {
         previewLayer = nil
     }
 
-    // MARK: - Camera Management
+    // MARK: - 相机管理
     
-    /// Checks current authorization status and requests access if needed
+    /// 检查当前授权状态，需要时请求访问权限
     func checkAndRequestVideoAuthorization() {
         let status = AVCaptureDevice.authorizationStatus(for: .video)
         DispatchQueue.main.async {
@@ -91,7 +91,7 @@ class WebcamManager: NSObject, ObservableObject {
         
         switch status {
         case .authorized:
-            checkCameraAvailability() // Check availability if authorized
+            checkCameraAvailability() // 已授权则检查可用性
         case .notDetermined:
             requestVideoAccess()
         case .denied, .restricted:
@@ -101,19 +101,19 @@ class WebcamManager: NSObject, ObservableObject {
         }
     }
     
-    /// Requests access to the camera
+    /// 请求相机访问权限
     private func requestVideoAccess() {
         AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
             DispatchQueue.main.async {
                 self?.authorizationStatus = granted ? .authorized : .denied
                 if granted {
-                    self?.checkCameraAvailability() // Check availability if access granted
+                    self?.checkCameraAvailability() // 授权通过则检查可用性
                 }
             }
         }
     }
     
-    /// Checks if any camera devices are available and sets up capture session if needed
+    /// 检查是否有可用相机设备，需要时建立采集会话
     func checkCameraAvailability() {
         let availableDevices = AVCaptureDevice.DiscoverySession(
             deviceTypes: [.external, .builtInWideAngleCamera],
@@ -128,7 +128,7 @@ class WebcamManager: NSObject, ObservableObject {
         }
     }
     
-    /// Sets up the capture session with a completion handler
+    /// 带完成回调地建立采集会话
     private func setupCaptureSession(completion: @escaping (Bool) -> Void) {
         sessionQueue.async { [weak self] in
             guard let self = self else { 
@@ -136,13 +136,13 @@ class WebcamManager: NSObject, ObservableObject {
                 return 
             }
             
-            // Clean up any existing session before creating a new one
+            // 创建新会话前先清理已有会话
             self.cleanupExistingSession()
             
             let session = AVCaptureSession()
             
             do {
-                // Get available devices and prefer external camera if available
+                // 获取可用设备，若可用则优先外接摄像头
                 let discoverySession = AVCaptureDevice.DiscoverySession(
                     deviceTypes: [.external, .builtInWideAngleCamera],
                     mediaType: .video,
@@ -161,7 +161,7 @@ class WebcamManager: NSObject, ObservableObject {
                 
                 NSLog("Using camera: \(videoDevice.localizedName)")
                 
-                // Lock device for configuration
+                // 锁定设备以进行配置
                 try videoDevice.lockForConfiguration()
                 defer { videoDevice.unlockForConfiguration() }
                 
@@ -183,14 +183,14 @@ class WebcamManager: NSObject, ObservableObject {
                 
                 self.captureSession = session
                 
-                // Create and set up preview layer on main thread
+                // 在主线程创建并设置预览图层
                 DispatchQueue.main.async {
                     self.cameraAvailable = true
                     let previewLayer = AVCaptureVideoPreviewLayer(session: session)
                     previewLayer.videoGravity = .resizeAspectFill
                     self.previewLayer = previewLayer
                     
-                    // Setup is complete, let the caller know
+                    // 设置完成，通知调用方
                     completion(true)
                 }
                 
@@ -207,18 +207,18 @@ class WebcamManager: NSObject, ObservableObject {
         }
     }
     
-    /// Cleans up an existing capture session, removing all inputs and outputs
+    /// 清理已有采集会话，移除所有输入输出
     private func cleanupExistingSession() {
         if let existingSession = self.captureSession {
-            // First stop the session if running
+            // 若会话运行中则先停止
             if existingSession.isRunning {
                 existingSession.stopRunning()
             }
             
-            // Then perform configuration cleanup
+            // 然后执行配置清理
             existingSession.beginConfiguration()
             
-            // Remove all inputs and outputs
+            // 移除所有输入与输出
             for input in existingSession.inputs {
                 existingSession.removeInput(input)
             }
@@ -229,7 +229,7 @@ class WebcamManager: NSObject, ObservableObject {
             existingSession.commitConfiguration()
             self.captureSession = nil
             
-            // Clear preview layer on main thread
+            // 在主线程清除预览图层
             DispatchQueue.main.async {
                 self.previewLayer = nil
             }
@@ -266,16 +266,16 @@ class WebcamManager: NSObject, ObservableObject {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
             
-            // If no session exists, create new session
+            // 若无会话，则创建新会话
             if self.captureSession == nil {
                 self.setupCaptureSession { success in
                     if success {
-                        // Only start the session if setup was successful
+                        // 仅当设置成功时才启动会话
                         self.startRunningCaptureSession()
                     }
                 }
             } else {
-                // Session already exists, just start it
+                // 会话已存在，直接启动
                 self.startRunningCaptureSession()
             }
         }
@@ -289,7 +289,7 @@ class WebcamManager: NSObject, ObservableObject {
             
             session.startRunning()
             
-            // Update state on main thread
+            // 在主线程更新状态
             self.updateSessionState()
             
             NSLog("Capture session started successfully")
@@ -300,7 +300,7 @@ class WebcamManager: NSObject, ObservableObject {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
             
-            // Update state to indicate we're stopping
+            // 更新状态以表示正在停止
             DispatchQueue.main.async {
                 self.isSessionRunning = false
             }

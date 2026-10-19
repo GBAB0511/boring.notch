@@ -37,9 +37,9 @@ final class QuickLookService: ObservableObject {
         if selectFirst {
             self.selectedURL = accessingURLs.first
         }
-        // Observe the shared Quick Look preview panel closing so we can relinquish security scope
+        // 监听系统共享的 Quick Look 预览面板关闭事件，以便在关闭时释放安全作用域资源
         let panel = QLPreviewPanel.shared()
-        // Remove any existing observer for previous panel
+        // 移除之前面板遗留的观察者，避免重复监听
         if let prev = previewPanel {
             NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: prev)
         }
@@ -67,7 +67,7 @@ final class QuickLookService: ObservableObject {
             url.stopAccessingSecurityScopedResource()
         }
         accessingURLs.removeAll()
-        // If Quick Look panel was closed externally, also remove observer and clear reference
+        // 如果 Quick Look 面板是被外部关闭的，同样需要移除观察者并清空引用
         if let panel = previewPanel {
             NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: panel)
             previewPanel = nil
@@ -87,13 +87,13 @@ final class QuickLookService: ObservableObject {
 extension QuickLookService {
     @objc private func previewPanelWillClose(_ notification: Notification) {
         guard let panel = notification.object as? QLPreviewPanel, panel === previewPanel else { return }
-        // Ensure cleanup happens on main actor
+        // 确保清理工作在主线程（MainActor）上执行，避免线程安全问题
         Task { @MainActor in
             stopAccessingCurrentURLs()
             selectedURL = nil
             urls.removeAll()
             isQuickLookOpen = false
-            // Remove observer and clear reference
+            // 移除观察者并清空面板引用
             NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: panel)
             previewPanel = nil
         }

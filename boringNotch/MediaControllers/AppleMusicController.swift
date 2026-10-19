@@ -10,7 +10,7 @@ import Combine
 import SwiftUI
 
 class AppleMusicController: MediaControllerProtocol {
-    // MARK: - Properties
+    // MARK: - 属性
     @Published private var playbackState: PlaybackState = PlaybackState(
         bundleIdentifier: "com.apple.Music",
         playbackRate: 1
@@ -30,7 +30,7 @@ class AppleMusicController: MediaControllerProtocol {
 
     private var notificationTask: Task<Void, Never>?
     
-    // MARK: - Initialization
+    // MARK: - 初始化
     init() {
         setupPlaybackStateChangeObserver()
         Task {
@@ -56,7 +56,7 @@ class AppleMusicController: MediaControllerProtocol {
         notificationTask?.cancel()
     }
     
-    // MARK: - Protocol Implementation
+    // MARK: - 协议实现
     func play() async {
         await executeCommand("play")
     }
@@ -151,7 +151,7 @@ class AppleMusicController: MediaControllerProtocol {
         self.playbackState = updatedState
     }
     
-    // MARK: - Private Methods
+    // MARK: - 私有方法
     
     private func executeCommand(_ command: String) async {
         let script = "tell application \"Music\" to \(command)"

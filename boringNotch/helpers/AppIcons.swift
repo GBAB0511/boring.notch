@@ -26,7 +26,7 @@ struct AppIcons {
         return getIcon(file: path)
     }
     
-        /// Easily read Info.plist as a Dictionary from any bundle by accessing .infoDictionary on Bundle
+        /// 通过访问 Bundle 的 .infoDictionary，便捷地把任意 bundle 的 Info.plist 读取为字典
     func bundle(forBundleID: String) -> Bundle? {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: forBundleID)
         else { return nil }

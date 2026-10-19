@@ -9,7 +9,7 @@ import AppKit
 import Foundation
 import UniformTypeIdentifiers
 
-/// Dynamic representation of a sharing provider discovered at runtime
+/// 运行时发现的分享提供者的动态表示
 struct QuickShareProvider: Identifiable, Hashable, Sendable {
     var id: String
     var imageData: Data?
@@ -22,7 +22,7 @@ class QuickShareService: ObservableObject {
     @Published var availableProviders: [QuickShareProvider] = []
     @Published var isPickerOpen = false
     private var cachedServices: [String: NSSharingService] = [:]
-    // Hold security-scoped URLs during sharing
+    // 分享期间持有受安全作用域约束的 URL
     private var sharingAccessingURLs: [URL] = []
     private var lifecycleDelegate: SharingLifecycleDelegate?
    
@@ -32,14 +32,14 @@ class QuickShareService: ObservableObject {
         }
     }
     
-    // MARK: - Provider Discovery
+    // MARK: - 提供者发现
     
     @MainActor
     func discoverAvailableProviders() async {
         let finder = ShareServiceFinder()
 
-        // Use simple test items without creating actual temp files
-        // This avoids issues with the Share Sheet retaining references to deleted files
+        // 使用简单测试项而不创建实际临时文件
+        // 避免分享面板持有已删除文件引用的问题
         let testItems: [Any] = [
             URL(string:"http://example.com") ?? URL(fileURLWithPath: "/"),
             "Test Text" as NSString
@@ -73,7 +73,7 @@ class QuickShareService: ObservableObject {
 
     }
     
-    // MARK: - File Picker
+    // MARK: - 文件选择器
     @MainActor
     func showFilePicker(for provider: QuickShareProvider, from view: NSView?) async {
         guard !isPickerOpen else {
@@ -108,16 +108,16 @@ class QuickShareService: ObservableObject {
         completion(response)
     }
     
-    // MARK: - Sharing
+    // MARK: - 分享
     @MainActor
     func shareFilesOrText(_ items: [Any], using provider: QuickShareProvider, from view: NSView?) async {
         let fileURLs = items.compactMap { $0 as? URL }.filter { $0.isFileURL }
-        // Stop any previous sharing access
+        // 停止任何先前的分享访问
         stopSharingAccessingURLs()
-        // Start security-scoped access for all file URLs
+        // 为所有文件 URL 开启安全作用域访问
         sharingAccessingURLs = fileURLs.filter { $0.startAccessingSecurityScopedResource() }
 
-        // Setup lifecycle delegate to keep notch open during picker/service
+        // 设置生命周期委托，以便在选择器/服务期间保持刘海打开
         let delegate = SharingStateManager.shared.makeDelegate { [weak self] in
             self?.lifecycleDelegate = nil
             self?.stopSharingAccessingURLs()
@@ -125,7 +125,7 @@ class QuickShareService: ObservableObject {
         lifecycleDelegate = delegate
 
         if let svc = cachedServices[provider.id], svc.canPerform(withItems: items) {
-            // For direct service path, explicitly mark service interaction start
+            // 对于直接服务路径，显式标记服务交互开始
             delegate.markServiceBegan()
             svc.delegate = delegate
             svc.perform(withItems: items)
@@ -146,7 +146,7 @@ class QuickShareService: ObservableObject {
         }
         sharingAccessingURLs.removeAll()
     }
-// MARK: - SharingServiceDelegate
+// MARK: - 分享服务委托
 
 private class SharingServiceDelegate: NSObject {}
     
@@ -165,7 +165,7 @@ private class SharingServiceDelegate: NSObject {}
             }
         }
 
-        // If text was found, prioritize sharing it.
+        // 若找到文本，优先分享文本
         if let text = foundText {
             if shareProvider.supportsRawText {
                 await shareFilesOrText([text], using: shareProvider, from: view)
@@ -197,7 +197,7 @@ private class SharingServiceDelegate: NSObject {}
     }
 }
 
-// MARK: - App Storage Extension for Provider Selection
+// MARK: - 提供者选择的应用存储扩展
 
 extension QuickShareProvider {
     static var defaultProvider: QuickShareProvider {

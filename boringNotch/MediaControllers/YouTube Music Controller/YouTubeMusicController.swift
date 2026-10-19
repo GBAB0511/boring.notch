@@ -11,7 +11,7 @@ import Combine
 import SwiftUI
 
 final class YouTubeMusicController: MediaControllerProtocol {
-    // MARK: - Published Properties
+    // MARK: - 已发布属性
     @Published var playbackState = PlaybackState(
         bundleIdentifier: YouTubeMusicConfiguration.default.bundleIdentifier
     )
@@ -43,7 +43,7 @@ final class YouTubeMusicController: MediaControllerProtocol {
         }
     }
 
-    // MARK: - Private Properties
+    // MARK: - 私有属性
     private let configuration: YouTubeMusicConfiguration
     private let httpClient: YouTubeMusicHTTPClient
     private let authManager: YouTubeMusicAuthManager
@@ -53,7 +53,7 @@ final class YouTubeMusicController: MediaControllerProtocol {
     private var appStateObserver: Task<Void, Never>?
     private var reconnectDelay: TimeInterval = 1.0
     
-    // MARK: - Initialization
+    // MARK: - 初始化
     init(configuration: YouTubeMusicConfiguration = .default) {
         self.configuration = configuration
         self.httpClient = YouTubeMusicHTTPClient(baseURL: configuration.baseURL)
@@ -66,7 +66,7 @@ final class YouTubeMusicController: MediaControllerProtocol {
         }
     }
     
-    // MARK: - MediaControllerProtocol Implementation
+    // MARK: - MediaControllerProtocol 实现
     func play() async { await sendCommand(endpoint: "/play", method: "POST") }
     
     func pause() async { await sendCommand(endpoint: "/pause", method: "POST") }
@@ -113,7 +113,7 @@ final class YouTubeMusicController: MediaControllerProtocol {
             let token = try await authManager.authenticate()
             let response = try await httpClient.getPlaybackInfo(token: token)
             await updatePlaybackState(with: response)
-            // Fetch like state if supported
+            // 若支持则获取「喜欢」状态
             do {
                 let likeResp = try await httpClient.getLikeState(token: token)
                 var newState = playbackState
@@ -122,7 +122,7 @@ final class YouTubeMusicController: MediaControllerProtocol {
                         case "LIKE":
                             newState.isFavorite = true
                         case "DISLIKE":
-                            // We don't have a separate dislike UI yet, treat as not favorited
+                            // 目前尚无单独的「不喜欢」UI，先视为未收藏
                             newState.isFavorite = false
                         default:
                             newState.isFavorite = false
@@ -132,7 +132,7 @@ final class YouTubeMusicController: MediaControllerProtocol {
                     }
                 playbackState = newState
             } catch {
-                // Don't treat it as an error if the like endpoint doesn't exist — just skip
+                // 若「喜欢」接口不存在，不视为错误，直接跳过
             }
         } catch YouTubeMusicError.authenticationRequired {
             await authManager.invalidateToken()
@@ -141,7 +141,7 @@ final class YouTubeMusicController: MediaControllerProtocol {
         }
     }
     
-    // MARK: - Private Methods
+    // MARK: - 私有方法
     private func setupAppStateObserver() {
         appStateObserver = Task { [weak self] in
             await withTaskGroup(of: Void.self) { group in
@@ -228,7 +228,7 @@ final class YouTubeMusicController: MediaControllerProtocol {
         do {
             try await client.connect(to: wsURL, with: token)
             webSocketClient = client
-            stopPeriodicUpdates() // WebSocket will provide real-time updates
+            stopPeriodicUpdates() // WebSocket 会提供实时更新
             reconnectDelay = configuration.reconnectDelay.lowerBound
         } catch {
             print("[YouTubeMusicController] WebSocket connection failed: \(error)")
@@ -304,7 +304,7 @@ final class YouTubeMusicController: MediaControllerProtocol {
     
     private func handleWebSocketDisconnect() async {
         webSocketClient = nil
-        await startPeriodicUpdates() // Fallback to polling
+        await startPeriodicUpdates() // 回退到轮询
         await scheduleReconnect()
     }
     
@@ -359,7 +359,7 @@ final class YouTubeMusicController: MediaControllerProtocol {
                 body: body,
                 token: token
             )
-            // Lightweight endpoint-specific parsing
+            // 针对具体端点的轻量解析
             if endpoint == "/shuffle" {
                 if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any], let shuffleState = json["state"] as? Bool {
                     playbackState.isShuffled = shuffleState
@@ -371,7 +371,7 @@ final class YouTubeMusicController: MediaControllerProtocol {
                     if let mode = json["mode"] as? String { updateRepeatMode(mode) }
                 }
             }  else if endpoint == "/switch-repeat" {
-                // Find next repeat mode
+                // 查找下一个循环模式
                 let nextMode: RepeatMode
                 switch playbackState.repeatMode {
                 case .off: nextMode = .all

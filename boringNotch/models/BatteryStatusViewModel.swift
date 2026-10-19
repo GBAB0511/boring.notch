@@ -4,7 +4,7 @@ import Foundation
 import IOKit.ps
 import SwiftUI
 
-/// A view model that manages and monitors the battery status of the device
+/// 管理并监听设备电池状态的视图模型
 class BatteryStatusViewModel: ObservableObject {
 
     private var wasCharging: Bool = false
@@ -27,20 +27,20 @@ class BatteryStatusViewModel: ObservableObject {
 
     static let shared = BatteryStatusViewModel()
 
-    /// Initializes the view model with a given BoringViewModel instance
-    /// - Parameter vm: The BoringViewModel instance
+    /// 用给定的 BoringViewModel 实例初始化视图模型
+    /// - 参数 vm：BoringViewModel 实例
     private init() {
         setupPowerStatus()
         setupMonitor()
     }
 
-    /// Sets up the initial power status by fetching battery information
+    /// 通过获取电池信息设置初始电源状态
     private func setupPowerStatus() {
         let batteryInfo = managerBattery.initializeBatteryInfo()
         updateBatteryInfo(batteryInfo)
     }
 
-    /// Sets up the monitor to observe battery events
+    /// 设置监听器以观察电池事件
     private func setupMonitor() {
         managerBatteryId = managerBattery.addObserver { [weak self] event in
             guard let self = self else { return }
@@ -48,8 +48,8 @@ class BatteryStatusViewModel: ObservableObject {
         }
     }
 
-    /// Handles battery events and updates the corresponding properties
-    /// - Parameter event: The battery event to handle
+    /// 处理电池事件并更新相应属性
+    /// - 参数 event：要处理的电池事件
     private func handleBatteryEvent(_ event: BatteryActivityManager.BatteryEvent) {
         switch event {
         case .powerSourceChanged(let isPluggedIn):
@@ -104,8 +104,8 @@ class BatteryStatusViewModel: ObservableObject {
         }
     }
 
-    /// Updates the battery information with the given BatteryInfo instance
-    /// - Parameter batteryInfo: The BatteryInfo instance containing the battery data
+    /// 用给定的 BatteryInfo 实例更新电池信息
+    /// - 参数 batteryInfo：包含电池数据的 BatteryInfo 实例
     private func updateBatteryInfo(_ batteryInfo: BatteryInfo) {
         withAnimation {
             self.levelBattery = batteryInfo.currentCapacity
@@ -118,8 +118,8 @@ class BatteryStatusViewModel: ObservableObject {
         }
     }
 
-    /// Notifies important changes in the battery status with an optional delay
-    /// - Parameter delay: The delay before notifying the change, default is 0.0
+    /// 以可选延迟通知电池状态的重要变化（触发电池展开提示条）
+    /// - 参数 delay：通知前的延迟秒数，默认 0.0
     private func notifyImportanChangeStatus(delay: Double = 0.0) {
         Task {
             try? await Task.sleep(for: .seconds(delay))

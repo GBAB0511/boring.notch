@@ -37,7 +37,7 @@ class SparkleNSView: NSView {
         cell.scale = 0.2
         cell.scaleRange = 0.1
         cell.alphaSpeed = -0.5
-        cell.yAcceleration = 10 // Add a slight downward motion
+        cell.yAcceleration = 10 // 增加轻微的向下运动
         
         emitterLayer.emitterCells = [cell]
         
@@ -54,10 +54,10 @@ class SparkleNSView: NSView {
         emitterLayer.emitterSize = self.bounds.size
         emitterLayer.emitterPosition = CGPoint(x: bounds.width / 2, y: bounds.height / 2)
         
-        // Adjust birth rate based on view size
+        // 根据视图尺寸调整粒子生成速率
         let area = bounds.width * bounds.height
         let baseBirthRate: Float = 50
-        let adjustedBirthRate = 20 // Assuming 200x200 as base size
+        let adjustedBirthRate = 20 // 假设以 200x200 为基准尺寸
         emitterLayer.emitterCells?.first?.birthRate = Float(adjustedBirthRate)
     }
     

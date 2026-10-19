@@ -70,23 +70,23 @@ class BoringViewModel: NSObject, ObservableObject {
     }
     
     private func setupDetectorObserver() {
-        // Publisher for the user’s fullscreen detection setting
+        // 用户「全屏检测」设置的发布者（映射为是否启用：不等于 .never 即启用）
         let enabledPublisher = Defaults
             .publisher(.hideNotchOption)
             .map(\.newValue)
             .map { $0 != .never }
             .removeDuplicates()
 
-        // Publisher for the current screen UUID (non-nil, distinct)
+        // 当前屏幕 UUID 的发布者（过滤空值并去重）
         let screenPublisher = $screenUUID
             .compactMap { $0 }
             .removeDuplicates()
 
-        // Publisher for fullscreen status dictionary
+        // 全屏状态字典的发布者（去重）
         let fullscreenStatusPublisher = detector.$fullscreenStatus
             .removeDuplicates()
 
-        // Combine all three: screen UUID, fullscreen status, and enabled setting
+        // 合并三者：屏幕 UUID + 全屏状态 + 是否启用隐藏
         Publishers.CombineLatest3(screenPublisher, fullscreenStatusPublisher, enabledPublisher)
             .map { screenUUID, fullscreenStatus, enabled in
                 let isFullscreen = fullscreenStatus[screenUUID] ?? false
@@ -102,7 +102,7 @@ class BoringViewModel: NSObject, ObservableObject {
             .store(in: &cancellables)
     }
 
-    // Computed property for effective notch height
+    // 计算有效刘海高度的计算属性：全屏且无刘海（或屏幕为空）时返回 0（隐藏），否则返回折叠态高度
     var effectiveClosedNotchHeight: CGFloat {
         let currentScreen = screenUUID.flatMap { NSScreen.screen(withUUID: $0) }
         let noNotchAndFullscreen = hideOnClosed && (currentScreen?.safeAreaInsets.top ?? 0 <= 0 || currentScreen == nil)
@@ -189,16 +189,18 @@ class BoringViewModel: NSObject, ObservableObject {
         return false
     }
 
+    // 打开刘海：切换到展开尺寸、置为 open 状态，并强制刷新音乐信息
     func open() {
         self.notchSize = openNotchSize
         self.notchState = .open
         
-        // Force music information update when notch is opened
+        // 刘海打开时强制更新音乐信息
         MusicManager.shared.forceUpdate()
     }
 
+    // 关闭刘海：恢复折叠尺寸、置为 closed 状态，并按设置决定回到货架还是首页
     func close() {
-        // Do not close while a share picker or sharing service is active
+        // 当分享选择器或分享服务处于活跃状态时不关闭，避免打断用户操作
         if SharingStateManager.shared.preventNotchClose {
             return
         }
@@ -209,8 +211,8 @@ class BoringViewModel: NSObject, ObservableObject {
         self.coordinator.sneakPeek.show = false
         self.edgeAutoOpenActive = false
 
-        // Set the current view to shelf if it contains files and the user enables openShelfByDefault
-        // Otherwise, if the user has not enabled openLastShelfByDefault, set the view to home
+        // 若货架含文件且用户开启「默认打开货架」，则关闭后切到货架视图
+        // 否则，若用户未开启「记住上次标签」，则切回首页视图
     if !ShelfStateViewModel.shared.isEmpty && Defaults[.openShelfByDefault] {
             coordinator.currentView = .shelf
         } else if !coordinator.openLastTabByDefault {

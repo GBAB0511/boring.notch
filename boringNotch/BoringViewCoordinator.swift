@@ -82,10 +82,10 @@ class BoringViewCoordinator: ObservableObject {
     
     @Default(.hudReplacement) var hudReplacement: Bool
     
-    // Legacy storage for migration
+    // 旧版存储（按屏幕名称），用于启动时迁移到新的 UUID 存储
     @AppStorage("preferred_screen_name") private var legacyPreferredScreenName: String?
     
-    // New UUID-based storage
+    // 新的基于 UUID 的存储，记录用户偏好的刘海所在屏幕
     @AppStorage("preferred_screen_uuid") var preferredScreenUUID: String? {
         didSet {
             if let uuid = preferredScreenUUID {
@@ -102,27 +102,27 @@ class BoringViewCoordinator: ObservableObject {
     private var hudReplacementCancellable: AnyCancellable?
 
     private init() {
-        // Perform migration from name-based to UUID-based storage
+        // 执行从「基于名称」到「基于 UUID」的存储迁移
         if preferredScreenUUID == nil, let legacyName = legacyPreferredScreenName {
-            // Try to find screen by name and migrate to UUID
+            // 尝试按名称查找屏幕并迁移为 UUID
             if let screen = NSScreen.screens.first(where: { $0.localizedName == legacyName }),
                let uuid = screen.displayUUID {
                 preferredScreenUUID = uuid
                 NSLog("✅ Migrated display preference from name '\(legacyName)' to UUID '\(uuid)'")
             } else {
-                // Fallback to main screen if legacy screen not found
+                // 若未找到旧版屏幕，则回退到主屏幕
                 preferredScreenUUID = NSScreen.main?.displayUUID
                 NSLog("⚠️ Could not find display named '\(legacyName)', falling back to main screen")
             }
-            // Clear legacy value after migration
+            // 迁移后清除旧版值
             legacyPreferredScreenName = nil
         } else if preferredScreenUUID == nil {
-            // No legacy value, use main screen
+            // 无旧版值，使用主屏幕
             preferredScreenUUID = NSScreen.main?.displayUUID
         }
         
         selectedScreenUUID = preferredScreenUUID ?? NSScreen.main?.displayUUID ?? ""
-        // Observe changes to accessibility authorization and react accordingly
+        // 监听辅助功能授权变化并作出相应反应（授权后启动媒体键拦截）
         accessibilityObserver = NotificationCenter.default.addObserver(
             forName: Notification.Name.accessibilityAuthorizationChanged,
             object: nil,
@@ -135,7 +135,7 @@ class BoringViewCoordinator: ObservableObject {
             }
         }
 
-        // Observe changes to hudReplacement
+        // 监听 HUD 替换设置的变化：开启时校验辅助功能授权并启动媒体键拦截，关闭时停止
         hudReplacementCancellable = Defaults.publisher(.hudReplacement)
             .sink { [weak self] change in
                 Task { @MainActor in
@@ -205,6 +205,8 @@ class BoringViewCoordinator: ObservableObject {
         }
     }
 
+    // 显示/隐藏「偷看」提示（音量、亮度、歌名等）。
+    // 参数：status 是否显示，type 提示类型，duration 显示时长，value 数值，icon 图标。
     func toggleSneakPeek(
         status: Bool, type: SneakContentType, duration: TimeInterval = 1.5, value: CGFloat = 0,
         icon: String = ""
@@ -212,6 +214,7 @@ class BoringViewCoordinator: ObservableObject {
         sneakPeekDuration = duration
         if type != .music {
             // close()
+            // 非音乐类型的偷看提示仅在启用 HUD 替换时显示
             if !Defaults[.hudReplacement] {
                 return
             }
@@ -233,7 +236,7 @@ class BoringViewCoordinator: ObservableObject {
     private var sneakPeekDuration: TimeInterval = 1.5
     private var sneakPeekTask: Task<Void, Never>?
 
-    // Helper function to manage sneakPeek timer using Swift Concurrency
+    // 使用 Swift 并发管理偷看提示自动隐藏的定时器（显示 duration 秒后自动隐藏）
     private func scheduleSneakPeekHide(after duration: TimeInterval) {
         sneakPeekTask?.cancel()
 

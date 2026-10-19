@@ -12,7 +12,7 @@ class ShareServiceFinder: NSObject, NSSharingServicePickerDelegate {
     @MainActor
     private var onServicesCaptured: (([NSSharingService]) -> Void)?
 
-    /// Returns share services asynchronously without blocking the UI
+    /// 异步返回可用的分享服务，不阻塞 UI
     @MainActor
     func findApplicableServices(for items: [Any], timeout: TimeInterval = 2.0) async -> [NSSharingService] {
 
@@ -23,7 +23,7 @@ class ShareServiceFinder: NSObject, NSSharingServicePickerDelegate {
         return await withCheckedContinuation { continuation in
             var didResume = false
 
-            // Capture services callback
+            // 捕获分享服务回调
             Task { @MainActor in
                 self.onServicesCaptured = { services in
                     guard !didResume else { return }
@@ -35,7 +35,7 @@ class ShareServiceFinder: NSObject, NSSharingServicePickerDelegate {
             picker.show(relativeTo: dummyView.bounds, of: dummyView, preferredEdge: .minY)
 
 
-            // Timeout task
+            // 超时任务：避免长时间等待分享服务枚举
             Task { @MainActor in
                 try? await Task.sleep(for: .seconds(timeout))
                 guard !didResume else { return }

@@ -9,7 +9,7 @@ import Defaults
 import EventKit
 import SwiftUI
 
-// MARK: - CalendarManager
+// MARK: - 日历管理器
 
 @MainActor
 class CalendarManager: ObservableObject {
@@ -59,7 +59,7 @@ class CalendarManager: ObservableObject {
         let all = await calendarService.calendars()
         self.eventCalendars = all.filter { !$0.isReminder }
         self.reminderLists = all.filter { $0.isReminder }
-        self.allCalendars = all // for legacy compatibility, can be removed if not needed
+        self.allCalendars = all // 为兼容旧版保留，如不需要可移除
         updateSelectedCalendars()
     }
 
@@ -131,7 +131,7 @@ class CalendarManager: ObservableObject {
         
 
     func updateSelectedCalendars() {
-        // Populate selectedCalendarIDs based on Defaults calendar selection state
+        // 根据 Defaults 中的日历选择状态填充 selectedCalendarIDs
         switch Defaults[.calendarSelectionState] {
         case .all:
             selectedCalendarIDs = Set(allCalendars.map { $0.id })
@@ -139,7 +139,7 @@ class CalendarManager: ObservableObject {
             selectedCalendarIDs = identifiers
         }
 
-        // Update the local calendar objects that correspond to the selected ids
+        // 更新与所选 ID 对应的本地日历对象
         selectedCalendars = allCalendars.filter { selectedCalendarIDs.contains($0.id) }
     }
 
@@ -166,7 +166,7 @@ class CalendarManager: ObservableObject {
 
             selectionState =
                 identifiers.isEmpty
-                ? .all : identifiers.count == allCalendars.count ? .all : .selected(identifiers)  // if empty, select all
+                ? .all : identifiers.count == allCalendars.count ? .all : .selected(identifiers)  // 若为空，则全选
         }
 
         Defaults[.calendarSelectionState] = selectionState
@@ -195,7 +195,7 @@ class CalendarManager: ObservableObject {
     
     func setReminderCompleted(reminderID: String, completed: Bool) async {
         await calendarService.setReminderCompleted(reminderID: reminderID, completed: completed)
-        // Refresh events after updating
+        // 更新后刷新事件
         events = await calendarService.events(
             from: currentWeekStartDate,
             to: Calendar.current.date(byAdding: .day, value: 1, to: currentWeekStartDate)!,

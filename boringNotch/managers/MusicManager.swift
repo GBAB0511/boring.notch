@@ -15,20 +15,20 @@ let defaultImage: NSImage = .init(
 )!
 
 class MusicManager: ObservableObject {
-    // MARK: - Properties
+    // MARK: - 属性
     static let shared = MusicManager()
     private var cancellables = Set<AnyCancellable>()
     private var controllerCancellables = Set<AnyCancellable>()
     private var debounceIdleTask: Task<Void, Never>?
 
-    // Helper to check if macOS has removed support for NowPlayingController
+    // 用于检查 macOS 是否已移除对 NowPlayingController 的支持
     public private(set) var isNowPlayingDeprecated: Bool = false
     private let mediaChecker = MediaChecker()
 
-    // Active controller
+    // 当前活跃的媒体控制器
     private var activeController: (any MediaControllerProtocol)?
 
-    // Published properties for UI
+    // 供 UI 使用的发布属性
     @Published var songTitle: String = "I'm Handsome"
     @Published var artistName: String = "Me"
     @Published var albumArt: NSImage = defaultImage
@@ -56,7 +56,7 @@ class MusicManager: ObservableObject {
 
     private var artworkData: Data? = nil
 
-    // Store last values at the time artwork was changed
+    // 存储封面变更时的最后一次取值（用于判断曲目是否变化）
     private var lastArtworkTitle: String = "I'm Handsome"
     private var lastArtworkArtist: String = "Me"
     private var lastArtworkAlbum: String = "Self Love"
@@ -68,16 +68,16 @@ class MusicManager: ObservableObject {
     @Published var isTransitioning: Bool = false
     private var transitionWorkItem: DispatchWorkItem?
 
-    // MARK: - Initialization
+    // MARK: - 初始化
     init() {
-        // Listen for changes to the default controller preference
+        // 监听默认控制器偏好设置的变化
         NotificationCenter.default.publisher(for: Notification.Name.mediaControllerChanged)
             .sink { [weak self] _ in
                 self?.setActiveControllerBasedOnPreference()
             }
             .store(in: &cancellables)
 
-        // Initialize deprecation check asynchronously
+        // 异步初始化弃用检查
         Task { @MainActor in
             do {
                 self.isNowPlayingDeprecated = try await self.mediaChecker.checkDeprecationStatus()
@@ -87,7 +87,7 @@ class MusicManager: ObservableObject {
                 self.isNowPlayingDeprecated = false
             }
             
-            // Initialize the active controller after deprecation check
+            // 弃用检查后初始化活跃控制器
             self.setActiveControllerBasedOnPreference()
         }
     }
@@ -103,13 +103,14 @@ class MusicManager: ObservableObject {
         flipWorkItem?.cancel()
         transitionWorkItem?.cancel()
 
-        // Release active controller
+        // 释放活跃控制器
         activeController = nil
     }
 
-    // MARK: - Setup Methods
+    // MARK: - 设置方法
+    // 根据类型创建对应的媒体控制器，并订阅其播放状态流
     private func createController(for type: MediaControllerType) -> (any MediaControllerProtocol)? {
-        // Cleanup previous controller
+        // 清理上一个控制器
         if activeController != nil {
             controllerCancellables.removeAll()
             activeController = nil
@@ -119,7 +120,7 @@ class MusicManager: ObservableObject {
 
         switch type {
         case .nowPlaying:
-            // Only create NowPlayingController if not deprecated on this macOS version
+            // 仅当该 macOS 版本未弃用 NowPlaying 时才创建
             if !self.isNowPlayingDeprecated {
                 newController = NowPlayingController()
             } else {
@@ -133,7 +134,7 @@ class MusicManager: ObservableObject {
             newController = YouTubeMusicController()
         }
 
-        // Set up state observation for the new controller
+        // 为新控制器设置状态观察
         if let controller = newController {
             controller.playbackStatePublisher
                 .receive(on: DispatchQueue.main)
@@ -152,7 +153,7 @@ class MusicManager: ObservableObject {
         let preferredType = Defaults[.mediaController]
         print("Preferred Media Controller: \(preferredType)")
 
-        // If NowPlaying is deprecated but that's the preference, use Apple Music instead
+        // 若 NowPlaying 已弃用但偏好仍是它，则改用 Apple Music
         let controllerType = (self.isNowPlayingDeprecated && preferredType == .nowPlaying)
             ? .appleMusic
             : preferredType
@@ -160,28 +161,28 @@ class MusicManager: ObservableObject {
         if let controller = createController(for: controllerType) {
             setActiveController(controller)
         } else if controllerType != .appleMusic, let fallbackController = createController(for: .appleMusic) {
-            // Fallback to Apple Music if preferred controller couldn't be created
+            // 若无法创建偏好的控制器，则回退到 Apple Music
             setActiveController(fallbackController)
         }
     }
 
     private func setActiveController(_ controller: any MediaControllerProtocol) {
-        // Cancel any existing flip animation
+        // 取消任何已存在的翻转动画
         flipWorkItem?.cancel()
 
-        // Set new active controller
+        // 设置新的活跃控制器
         activeController = controller
         
         self.canFavoriteTrack = controller.supportsFavorite
 
-        // Get current state from active controller
+        // 从活跃控制器获取当前状态
         forceUpdate()
     }
 
-    // MARK: - Update Methods
+    // MARK: - 更新方法
     @MainActor
     private func updateFromPlaybackState(_ state: PlaybackState) {
-        // Check for playback state changes (playing/paused)
+        // 检查播放状态变化（播放/暂停）
         if state.isPlaying != self.isPlaying {
             NSLog("Playback state changed: \(state.isPlaying ? "Playing" : "Paused")")
             withAnimation(.smooth) {
@@ -194,24 +195,24 @@ class MusicManager: ObservableObject {
             }
         }
 
-        // Check for changes in track metadata using last artwork change values
+        // 使用上次封面变更值检查曲目元数据变化
         let titleChanged = state.title != self.lastArtworkTitle
         let artistChanged = state.artist != self.lastArtworkArtist
         let albumChanged = state.album != self.lastArtworkAlbum
         let bundleChanged = state.bundleIdentifier != self.lastArtworkBundleIdentifier
 
-        // Check for artwork changes
+        // 检查封面变化
         let artworkChanged = state.artwork != nil && state.artwork != self.artworkData
         let hasContentChange = titleChanged || artistChanged || albumChanged || artworkChanged || bundleChanged
 
-        // Handle artwork and visual transitions for changed content
+        // 处理内容变化时的封面与视觉过渡
         if hasContentChange {
             self.triggerFlipAnimation()
 
             if artworkChanged, let artwork = state.artwork {
                 self.updateArtwork(artwork)
             } else if state.artwork == nil {
-                // Try to use app icon if no artwork but track changed
+                // 若曲目变化但无封面，则尝试使用应用图标
                 if let appIconImage = AppIconAsNSImage(for: state.bundleIdentifier) {
                     self.usingAppIconForArtwork = true
                     self.updateAlbumArt(newAlbumArt: appIconImage)
@@ -220,19 +221,19 @@ class MusicManager: ObservableObject {
             self.artworkData = state.artwork
 
             if artworkChanged || state.artwork == nil {
-                // Update last artwork change values
+                // 更新上次封面变更值
                 self.lastArtworkTitle = state.title
                 self.lastArtworkArtist = state.artist
                 self.lastArtworkAlbum = state.album
                 self.lastArtworkBundleIdentifier = state.bundleIdentifier
             }
 
-            // Only update sneak peek if there's actual content and something changed
+            // 仅当有实际内容且发生变化时才更新偷看提示
             if !state.title.isEmpty && !state.artist.isEmpty && state.isPlaying {
                 self.updateSneakPeek()
             }
 
-            // Fetch lyrics on content change
+            // 内容变化时抓取歌词
             self.fetchLyricsIfAvailable(bundleIdentifier: state.bundleIdentifier, title: state.title, artist: state.artist)
         }
 
@@ -273,7 +274,7 @@ class MusicManager: ObservableObject {
 
         if state.bundleIdentifier != self.bundleIdentifier {
             self.bundleIdentifier = state.bundleIdentifier
-            // Update volume control support from active controller
+            // 从活跃控制器更新音量控制支持
             self.volumeControlSupported = activeController?.supportsVolumeControl ?? false
         }
 
@@ -293,7 +294,7 @@ class MusicManager: ObservableObject {
 
     func toggleFavoriteTrack() {
         guard canFavoriteTrack else { return }
-        // Toggle based on current state
+        // 根据当前状态切换（收藏/取消收藏）
         setFavorite(!isFavoriteTrack)
     }
 
@@ -335,12 +336,12 @@ class MusicManager: ObservableObject {
         }
     }
 
-    /// Placeholder dislike function
+    /// 占位用的「不喜欢」函数（当前仅实现为取消收藏）
     func dislikeCurrentTrack() {
         setFavorite(false)
     }
 
-    // MARK: - Lyrics
+    // MARK: - 歌词
     private func fetchLyricsIfAvailable(bundleIdentifier: String?, title: String, artist: String) {
         guard Defaults[.enableLyrics], !title.isEmpty else {
             DispatchQueue.main.async {
@@ -350,7 +351,7 @@ class MusicManager: ObservableObject {
             return
         }
 
-        // Prefer native Apple Music lyrics when available
+        // 可用时优先使用 Apple Music 原生歌词
         if let bundleIdentifier = bundleIdentifier, bundleIdentifier.contains("com.apple.Music") {
             Task { @MainActor in
                 let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.Music")
@@ -391,7 +392,7 @@ class MusicManager: ObservableObject {
                         return
                     }
                 } catch {
-                    // fall through to web lookup
+                    // 落到网络查询
                 }
                 await self.fetchLyricsFromWeb(title: title, artist: artist)
             }
@@ -421,7 +422,7 @@ class MusicManager: ObservableObject {
             return
         }
 
-        // LRCLIB simple search (no auth): https://lrclib.net/api/search?track_name=...&artist_name=...
+        // LRCLIB 简单搜索（无需鉴权）：https://lrclib.net/api/search?track_name=...&artist_name=...
         let urlString = "https://lrclib.net/api/search?track_name=\(encodedTitle)&artist_name=\(encodedArtist)"
         guard let url = URL(string: urlString) else {
             self.currentLyrics = ""
@@ -437,7 +438,7 @@ class MusicManager: ObservableObject {
             }
             if let jsonArray = try JSONSerialization.jsonObject(with: data) as? [[String: Any]],
                let first = jsonArray.first {
-                // Prefer plain lyrics (syncedLyrics may also be present)
+                // 优先纯文本歌词（可能同时存在逐字歌词）
                 let plain = (first["plainLyrics"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 let synced = (first["syncedLyrics"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 let resolved = plain.isEmpty ? synced : plain
@@ -460,12 +461,13 @@ class MusicManager: ObservableObject {
         }
     }
 
-    // MARK: - Synced lyrics helpers
+    // MARK: - 逐字歌词辅助
+    // 解析 LRC 格式的逐字歌词
     private func parseLRC(_ lrc: String) -> [(time: Double, text: String)] {
         var result: [(Double, String)] = []
         lrc.split(separator: "\n").forEach { lineSub in
             let line = String(lineSub)
-            // Match [mm:ss.xx] or [m:ss]
+            // 匹配 [mm:ss.xx] 或 [m:ss] 格式的时间戳
             let pattern = #"\[(\d{1,2}):(\d{2})(?:\.(\d{1,2}))?\]"#
             guard let regex = try? NSRegularExpression(pattern: pattern) else { return }
             let nsLine = line as NSString
@@ -488,9 +490,10 @@ class MusicManager: ObservableObject {
         return result.sorted { $0.0 < $1.0 }
     }
 
+    // 根据当前播放进度返回对应的歌词行
     func lyricLine(at elapsed: Double) -> String {
         guard !syncedLyrics.isEmpty else { return currentLyrics }
-        // Binary search for last line with time <= elapsed
+        // 二分查找时间 <= 当前进度的最后一行
         var low = 0
         var high = syncedLyrics.count - 1
         var idx = 0
@@ -507,10 +510,10 @@ class MusicManager: ObservableObject {
     }
 
     private func triggerFlipAnimation() {
-        // Cancel any existing animation
+        // 取消任何已存在的动画
         flipWorkItem?.cancel()
 
-        // Create a new animation
+        // 创建新动画（0.2 秒后恢复）
         let workItem = DispatchWorkItem { [weak self] in
             self?.isFlipping = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
@@ -563,7 +566,8 @@ class MusicManager: ObservableObject {
         }
     }
 
-    // MARK: - Playback Position Estimation
+    // MARK: - 播放位置估算
+    // 估算当前播放位置：播放中按时间差 × 倍速推算，暂停则返回已播时长
     public func estimatedPlaybackPosition(at date: Date = Date()) -> TimeInterval {
         guard isPlaying else { return min(elapsedTime, songDuration) }
 
@@ -592,7 +596,7 @@ class MusicManager: ObservableObject {
         }
     }
 
-    // MARK: - Public Methods for controlling playback
+    // MARK: - 控制播放的公开方法
     func playPause() {
         Task {
             await activeController?.togglePlay()
@@ -680,7 +684,7 @@ class MusicManager: ObservableObject {
     }
 
     func forceUpdate() {
-        // Request immediate update from the active controller
+        // 请求活跃控制器立即更新状态
         Task { [weak self] in
             if self?.activeController?.isActive() == true {
                 if let youtubeController = self?.activeController as? YouTubeMusicController {
@@ -694,7 +698,7 @@ class MusicManager: ObservableObject {
     
     
     func syncVolumeFromActiveApp() async {
-        // Check if bundle identifier is valid and if the app is actually running
+        // 检查 bundle identifier 是否有效且应用确实在运行
         guard let bundleID = bundleIdentifier, !bundleID.isEmpty,
               NSWorkspace.shared.runningApplications.contains(where: { $0.bundleIdentifier == bundleID }) else { return }
         
@@ -720,7 +724,7 @@ class MusicManager: ObservableObject {
             end tell
             """
         } else {
-            // For unsupported apps, don't sync volume
+            // 对于不支持的应用，不同步音量
             return
         }
         

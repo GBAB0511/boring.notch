@@ -64,9 +64,9 @@ final class BrightnessManager: ObservableObject {
 	}
 }
 
-// (DisplayServices helpers moved into XPC helper)
+// （DisplayServices 相关辅助已移入 XPC 辅助进程）
 
-// MARK: - Keyboard Backlight Controller
+// MARK: - 键盘背光控制器
 final class KeyboardBacklightManager: ObservableObject {
 	static let shared = KeyboardBacklightManager()
 
