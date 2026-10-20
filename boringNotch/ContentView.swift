@@ -405,9 +405,9 @@ struct ContentView: View {
                 .fill(.black)
                 .overlay(
                     HStack(alignment: .top) {
-                        if coordinator.expandingView.show
-                            && coordinator.expandingView.type == .music
-                        {
+                        // 如果刘海处于展开，并处于音乐面板？？存疑，可能是切歌时候出现的展开面板
+                        if coordinator.expandingView.show && coordinator.expandingView.type == .music {
+                            // 设置歌曲名
                             MarqueeText(
                                 .constant(musicManager.songTitle),
                                 textColor: Defaults[.coloredSpectrogram]
@@ -463,8 +463,11 @@ struct ContentView: View {
                                 .frame(width: 16, height: 12)
                         }
                 } else {
+                    // Lottie 动画容器：显式限定尺寸并居中，避免占满整个刘海区域
+                    // （此前 .infinity 会让动画撑满；数值可按需调整）
                     LottieAnimationContainer()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .frame(width: max(0, vm.effectiveClosedNotchHeight - 12),
+                               height: max(0, vm.effectiveClosedNotchHeight - 12), alignment: .center)
                 }
             }
             .frame(

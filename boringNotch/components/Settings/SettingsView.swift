@@ -1207,7 +1207,7 @@ struct Appearance: View {
                     "Use music visualizer spectrogram",
                     isOn: $useMusicVisualizer.animation()
                 )
-                .disabled(true)
+//                .disabled(true)
                 if !useMusicVisualizer {
                     if customVisualizers.count > 0 {
                         Picker(
@@ -1343,10 +1343,18 @@ struct Appearance: View {
                             }
 
                             Button {
+                                // 校验 URL：非空、可解析且为 http/https，
+                                // 避免空串导致强解包崩溃或存入无效地址
+                                let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
+                                guard !trimmedURL.isEmpty,
+                                      let visualizerURL = URL(string: trimmedURL),
+                                      let scheme = visualizerURL.scheme?.lowercased(),
+                                      scheme == "http" || scheme == "https"
+                                else { return }
                                 let visualizer: CustomVisualizer = .init(
                                     UUID: UUID(),
                                     name: name,
-                                    url: URL(string: url)!,
+                                    url: visualizerURL,
                                     speed: speed
                                 )
 
