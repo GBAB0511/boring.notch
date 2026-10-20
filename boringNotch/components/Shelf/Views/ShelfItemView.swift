@@ -20,6 +20,7 @@ struct ShelfItemView: View {
     @State private var showStack = false
     @State private var cachedPreviewImage: NSImage?
     @State private var debouncedDropTarget = false
+    @State private var isHovering = false
 
     private var isSelected: Bool { viewModel.isSelected }
     private var shouldHideDuringDrag: Bool { selection.isDragging && selection.isSelected(item.id) && false }
@@ -43,6 +44,7 @@ struct ShelfItemView: View {
                 .contentShape(Rectangle())
                 .animation(.easeInOut(duration: 0.1), value: debouncedDropTarget)
                 .animation(.easeInOut(duration: 0.1), value: isSelected)
+                .animation(.easeInOut(duration: 0.1), value: isHovering)
 
                 DraggableClickHandler(
                     item: item,
@@ -54,6 +56,11 @@ struct ShelfItemView: View {
                     onRightClick: viewModel.handleRightClick,
                     onClick: { event, nsview in
                         viewModel.handleClick(event: event, view: nsview)
+                    },
+                    onHoverChange: { hovering in
+                        DispatchQueue.main.async {
+                            isHovering = hovering
+                        }
                     }
                 )
             } else {
@@ -72,7 +79,7 @@ struct ShelfItemView: View {
             }
         }
         .onAppear {
-            Task { 
+            Task {
                 await viewModel.loadThumbnail()
                 // 在出现时预渲染一次拖拽预览
                 if cachedPreviewImage == nil {
@@ -130,6 +137,8 @@ struct ShelfItemView: View {
             return Color.accentColor.opacity(0.25)
         } else if isSelected {
             return Color.accentColor.opacity(0.15)
+        } else if isHovering {
+            return Color.primary.opacity(0.06)
         } else {
             return Color.clear
         }
@@ -140,6 +149,8 @@ struct ShelfItemView: View {
             return Color.accentColor.opacity(0.9)
         } else if isSelected {
             return Color.accentColor.opacity(0.8)
+        } else if isHovering {
+            return Color.primary.opacity(0.12)
         } else {
             return Color.clear
         }
@@ -176,7 +187,8 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
     @ViewBuilder let dragPreviewContent: () -> Content
     let onRightClick: (NSEvent, NSView) -> Void
     let onClick: (NSEvent, NSView) -> Void
-    
+    let onHoverChange: (Bool) -> Void
+
     func makeNSView(context: Context) -> DraggableClickView {
         let view = DraggableClickView()
         view.item = item
@@ -184,6 +196,7 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         view.dragPreviewImage = cachedPreviewImage ?? renderDragPreview()
         view.onRightClick = onRightClick
         view.onClick = onClick
+        view.onHoverChange = onHoverChange
         return view
     }
     
@@ -196,6 +209,7 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         }
         nsView.onRightClick = onRightClick
         nsView.onClick = onClick
+        nsView.onHoverChange = onHoverChange
     }
     
     private func renderDragPreview() -> NSImage {
@@ -217,12 +231,48 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         var dragPreviewImage: NSImage?
         var onRightClick: ((NSEvent, NSView) -> Void)?
         var onClick: ((NSEvent, NSView) -> Void)?
+        var onHoverChange: ((Bool) -> Void)?
 
         private var mouseDownEvent: NSEvent?
         private let dragThreshold: CGFloat = 3.0
         private var draggedURLs: [URL] = []
         private var draggedItems: [ShelfItem] = []
-        
+        private var hoverTrackingArea: NSTrackingArea?
+
+        // MARK: - 鼠标悬停跟踪
+
+        override func updateTrackingAreas() {
+            super.updateTrackingAreas()
+
+            if let area = hoverTrackingArea {
+                removeTrackingArea(area)
+            }
+
+            let options: NSTrackingArea.Options = [
+                .mouseEnteredAndExited,
+                .activeInKeyWindow,
+                .inVisibleRect
+            ]
+            let area = NSTrackingArea(
+                rect: bounds,
+                options: options,
+                owner: self,
+                userInfo: nil
+            )
+            addTrackingArea(area)
+            hoverTrackingArea = area
+        }
+
+        override func mouseEntered(with event: NSEvent) {
+            onHoverChange?(true)
+        }
+
+        override func mouseExited(with event: NSEvent) {
+            onHoverChange?(false)
+        }
+
+        // MARK: - 鼠标点击 / 拖拽
+
         override func rightMouseDown(with event: NSEvent) {
             onRightClick?(event, self)
         }

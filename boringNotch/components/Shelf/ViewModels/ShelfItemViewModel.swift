@@ -212,7 +212,8 @@ final class ShelfItemViewModel: ObservableObject {
         let menu = NSMenu()
 
         func addMenuItem(title: String) {
-            let mi = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+            let localizedText = String(localized: String.LocalizationValue(title))
+            let mi = NSMenuItem(title: localizedText, action: nil, keyEquivalent: "")
             menu.addItem(mi)
         }
 
@@ -306,19 +307,20 @@ final class ShelfItemViewModel: ObservableObject {
         if !selectedFileURLs.isEmpty { addMenuItem(title: "Show in Finder") }
         // 允许对文件和链接 URL 使用 Quick Look
         if !selectedFileURLs.isEmpty || !selectedLinkURLs.isEmpty {
+            let localizedQL = String(localized: "Quick Look")
             // 添加 Quick Look 菜单项
-            let quickLookItem = NSMenuItem(title: "Quick Look", action: nil, keyEquivalent: "")
+            let quickLookItem = NSMenuItem(title: localizedQL, action: nil, keyEquivalent: "")
             menu.addItem(quickLookItem)
             
             // 添加幻灯片放映作为备选菜单项（按住 Option 键时显示）
-            let slideshowItem = NSMenuItem(title: "Quick Look", action: nil, keyEquivalent: "")
+            let slideshowItem = NSMenuItem(title: localizedQL, action: nil, keyEquivalent: "")
             slideshowItem.isAlternate = true
             slideshowItem.keyEquivalentModifierMask = [.option]
             menu.addItem(slideshowItem)
         }
 
         menu.addItem(NSMenuItem.separator())
-        addMenuItem(title: "Share…")
+        addMenuItem(title: "Share")
         
         // 为图片文件添加「图片操作」分组
         let imageURLs = selectedFileURLs.filter { ImageProcessingService.shared.isImageFile($0) }
@@ -351,7 +353,7 @@ final class ShelfItemViewModel: ObservableObject {
 
         // 为文件/文件夹添加压缩选项（支持单个或多个）
         if !selectedFileURLs.isEmpty {
-            let compressItem = NSMenuItem(title: "Compress", action: nil, keyEquivalent: "")
+            let compressItem = NSMenuItem(title: String(localized: "Compress"), action: nil, keyEquivalent: "")
             menu.addItem(compressItem)
         }
 
@@ -361,7 +363,7 @@ final class ShelfItemViewModel: ObservableObject {
         addMenuItem(title: "Copy")
         // 如果有文件 URL，则添加「复制路径」作为备选菜单项（Option 键）
         if !selectedFileURLs.isEmpty {
-            let copyPathItem = NSMenuItem(title: "Copy Path", action: nil, keyEquivalent: "")
+            let copyPathItem = NSMenuItem(title: String(localized: "Copy Path"), action: nil, keyEquivalent: "")
             copyPathItem.isAlternate = true
             copyPathItem.keyEquivalentModifierMask = [.option]
             menu.addItem(copyPathItem)
@@ -475,7 +477,7 @@ final class ShelfItemViewModel: ObservableObject {
                 let selected = ShelfSelectionModel.shared.selectedItems(in: ShelfStateViewModel.shared.items)
                 for it in selected { ShelfActionService.open(it) }
 
-            case "Share…":
+            case "Share":
                 viewModel.shareItem(from: view)
 
             case "Rename":
